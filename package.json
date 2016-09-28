@@ -1,0 +1,14 @@
+{
+  "name": "daocasino_ico",
+  "version": "1.1.0", 
+  "description": "Dao.Casino crowdsale contract",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test"
+  },
+  "author": "AnthonyAkentiev",
+  "license": "MIT",
+  "dependencies": {
+
+  }
+}
