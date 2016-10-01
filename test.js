@@ -1,5 +1,8 @@
 var solc = require('solc');
+var web3 = require('web3');
+
 var fs = require('fs');
+var assert = require('assert');
 
 describe('Smart Contracts', function() {
      before("Initialize everything", function(done) {
@@ -11,7 +14,7 @@ describe('Smart Contracts', function() {
      });
 
      it('Should compile contract', function(done) {
-          var file = 'contracts/Token.sol';
+          var file = './contracts/Token.sol';
           var contractName = 'DaoCasinoToken';
 
           fs.readFile(file, function(err, result){
