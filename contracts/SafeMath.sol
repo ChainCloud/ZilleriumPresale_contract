@@ -1,5 +1,6 @@
 
-contract SafeMath {
+contract SafeMath 
+{
      function safeMul(uint a, uint b) internal returns (uint) 
      {
           uint c = a * b;
