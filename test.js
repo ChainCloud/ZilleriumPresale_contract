@@ -1,5 +1,6 @@
 var solc = require('solc');
-var web3 = require('web3');
+var Web3 = require('web3');
+var web3 = new Web3(new Web3.providers.HttpProvider("http://52.16.72.86:8545"));
 
 var fs = require('fs');
 var assert = require('assert');
@@ -25,9 +26,10 @@ describe('Smart Contracts', function() {
 
                var output = solc.compile(source, 1); // 1 activates the optimiser
                var abi = JSON.parse(output.contracts[contractName].interface);
-               var bytecode = output.contracts[contractName].bytecode;
 
-               /// 
+               //console.log('OUTPUT: ');
+               //console.log(output);
+               var bytecode = output.contracts[contractName].bytecode;
                var contract = web3.eth.contract(abi);
 
                done();
