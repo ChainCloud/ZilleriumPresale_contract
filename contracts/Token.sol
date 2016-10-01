@@ -1,6 +1,5 @@
 
 
-/*
 contract SafeMath 
 {
      function safeMul(uint a, uint b) internal returns (uint) 
@@ -128,8 +127,7 @@ contract StdToken is Token
           return allowed[_owner][_spender];
      }
 }
-*/
 
-contract DaoCasinoToken {
+contract DaoCasinoToken is SafeMath, StdToken {
 
 }
