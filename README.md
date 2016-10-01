@@ -5,6 +5,9 @@
     npm install
 ```
 
-Then, run the test framework:
-    mocha test
+To run tests:
+
+```bash
+     ./run-tests.sh
+```
 
