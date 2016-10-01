@@ -25,10 +25,11 @@ describe('Smart Contracts', function() {
                assert.notEqual(source.length,0);
 
                var output = solc.compile(source, 1); // 1 activates the optimiser
-               var abi = JSON.parse(output.contracts[contractName].interface);
 
-               //console.log('OUTPUT: ');
-               //console.log(output);
+               //console.log('FORMAL: ');
+               //console.log(output.formal);
+
+               var abi = JSON.parse(output.contracts[contractName].interface);
                var bytecode = output.contracts[contractName].bytecode;
                var contract = web3.eth.contract(abi);
 
