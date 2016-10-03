@@ -130,11 +130,15 @@ contract StdToken is Token
 
 contract DaoCasinoToken is SafeMath, StdToken 
 {
-     // Fields:
+// Events:
+     event Buy(address indexed sender, uint eth, uint fbt);
+
+// Fields:
      address public creator = 0x0;
      bool public isStop = false;
+     uint256 public supply = 0;
 
-     // Functions:
+// Functions:
      function DaoCasinoToken()  
      {
           creator = msg.sender;
@@ -148,63 +152,32 @@ contract DaoCasinoToken is SafeMath, StdToken
      }
 
 
-     function totalSupply() constant returns (uint256 supply) 
+     function totalSupply() constant returns (uint256 supplyOut) 
      {
-          // TODO:
-          supply = 0;
+          supplyOut = supply;
           return;
      }
 
-     /// @param _owner The address from which the balance will be retrieved
-     /// @return The balance
-     function balanceOf(address _owner) constant returns (uint256 balance) 
+     function getCurrentPrice() returns (uint price)
      {
-          // TODO:
-          balance = 0;
+          price = 1; 
           return;
      }
 
-     /// @notice send `_value` token to `_to` from `msg.sender`
-     /// @param _to The address of the recipient
-     /// @param _value The amount of token to be transferred
-     /// @return Whether the transfer was successful or not
-     function transfer(address _to, uint256 _value) returns (bool success) 
+     function buyTokens(address recipient) 
      {
-          // TODO:
-          success = false;
+          uint tokens = safeMul(msg.value, getCurrentPrice());
+
+          balances[recipient] = safeAdd(balances[recipient], tokens);
+          supply = safeAdd(supply, tokens);
+
+          Buy(recipient, msg.value, tokens);
           return;
      }
 
-     /// @notice send `_value` token to `_to` from `_from` on the condition it is approved by `_from`
-     /// @param _from The address of the sender
-     /// @param _to The address of the recipient
-     /// @param _value The amount of token to be transferred
-     /// @return Whether the transfer was successful or not
-     function transferFrom(address _from, address _to, uint256 _value) returns (bool success) 
+     /// This function is called when someone send money to this contract directly.
+     function() 
      {
-          // TODO:
-          success = false;
-          return;
-     }
-
-     /// @notice `msg.sender` approves `_addr` to spend `_value` tokens
-     /// @param _spender The address of the account able to transfer the tokens
-     /// @param _value The amount of wei to be approved for transfer
-     /// @return Whether the approval was successful or not
-     function approve(address _spender, uint256 _value) returns (bool success)
-     {
-          // TODO:
-          success = false;
-          return;
-     }
-
-     /// @param _owner The address of the account owning tokens
-     /// @param _spender The address of the account able to transfer the tokens
-     /// @return Amount of remaining tokens allowed to spent
-     function allowance(address _owner, address _spender) constant returns (uint256 remaining)
-     {
-          // TODO:
-          remaining = 0;
-          return;
+          throw;
      }
 }

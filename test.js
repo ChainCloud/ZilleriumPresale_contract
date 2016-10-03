@@ -26,8 +26,8 @@ describe('Smart Contracts', function() {
 
                var output = solc.compile(source, 1); // 1 activates the optimiser
 
-               //console.log('FORMAL: ');
-               //console.log(output.formal);
+               //console.log('OUTPUT: ');
+               //console.log(output);
 
                var abi = JSON.parse(output.contracts[contractName].interface);
                var bytecode = output.contracts[contractName].bytecode;
