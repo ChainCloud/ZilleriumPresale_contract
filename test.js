@@ -1,7 +1,7 @@
 var solc = require('solc');
 var Web3 = require('web3');
 //var web3 = new Web3(new Web3.providers.HttpProvider("http://52.16.72.86:8545"));
-var web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:9090"));
+var web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8989"));
 
 var fs = require('fs');
 var assert = require('assert');
@@ -79,12 +79,14 @@ describe('Smart Contracts', function() {
           //console.log('CON: ');
           //console.log(contract);
 
-          /*
           web3.eth.getBalance(creator, function(err, result){
                assert.equal(err,null);
                console.log('RESULT: ', result);
-          */
 
+               done();
+          });
+
+          /*
                contract.buyTokens(
                     {
                          from: buyer, 
@@ -96,7 +98,6 @@ describe('Smart Contracts', function() {
                          done();
                     }
                );
-
-          //});
+          */
      });
 });
