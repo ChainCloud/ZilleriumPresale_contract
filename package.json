@@ -10,6 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "ethereumjs-abi": "^0.6.4",
+    "ethereumjs-testrpc": "^2.2.7",
     "fs": "*",
     "request": "^2.75.0",
     "solc": "^0.4.2",
