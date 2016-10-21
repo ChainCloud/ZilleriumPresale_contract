@@ -158,9 +158,10 @@ contract DaoCasinoToken is SafeMath, StdToken
           return;
      }
 
-     function getCurrentPrice() returns (uint price)
+     function getCurrentPrice() constant returns (uint out)
      {
-          price = 1; 
+          // 1 ETH = 200 tokens
+          out = 200;
           return;
      }
 

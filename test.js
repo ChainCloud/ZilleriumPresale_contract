@@ -66,38 +66,39 @@ describe('Smart Contracts', function() {
                          web3.eth.getTransactionReceipt(c.transactionHash, function(err, result){
                               assert.equal(err, null);
 
+                              console.log('Contract address: ');
+                              console.log(result.contractAddress);
+
                               contract = web3.eth.contract(abi).at(result.contractAddress);
+
+                              //console.log('Contract: ');
+                              //console.log(contract);
+
                               done();
                          });
                     });
           });
      });
 
-     it('Should buy some tokens',function(done){
+     it('should get current token price',function(done){
           var amount = 1;
 
-          //console.log('CON: ');
-          //console.log(contract);
+          contract.getCurrentPrice(
+               {
+                    from: buyer, 
+                    gas: 1000000,
+               },
+               function(err, result){
+                    assert.equal(err, null);
 
-          web3.eth.getBalance(creator, function(err, result){
-               assert.equal(err,null);
-               console.log('RESULT: ', result);
+                    console.log('Result: ');
+                    console.log(result.toString(10));
 
-               done();
-          });
+                    // 1 ETH = 200 tokens
+                    assert.equal(result.toString(10),200);
 
-          /*
-               contract.buyTokens(
-                    {
-                         from: buyer, 
-                         value: web3.toWei(amount, "ether")
-                    },
-                    function(err, result){
-                         assert.equal(err, null);
-
-                         done();
-                    }
-               );
-          */
+                    done();
+               }
+          );
      });
 });
