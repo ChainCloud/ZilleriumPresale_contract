@@ -165,18 +165,19 @@ contract DaoCasinoToken is SafeMath, StdToken
           return;
      }
 
-     function buyTokens() 
+     function buyTokens()
      {
-          /*
-          var recipient = msg.sender;
-          uint tokens = safeMul(msg.value, getCurrentPrice());
+          if (msg.value==0) 
+               throw;
 
-          balances[recipient] = safeAdd(balances[recipient], tokens);
+          var to = msg.sender;
+          uint tokens = safeMul(msg.value, getCurrentPrice());
+          balances[to] = safeAdd(balances[to], tokens);
           supply = safeAdd(supply, tokens);
 
-          Buy(recipient, msg.value, tokens);
-          return;
-          */
+          //creator.call.value(msg.value)();
+
+          Buy(to, msg.value, tokens);
      }
 
      /// This function is called when someone send money to this contract directly.

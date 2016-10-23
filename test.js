@@ -5,11 +5,18 @@ var web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8989"));
 
 var fs = require('fs');
 var assert = require('assert');
+var BigNumber = require('bignumber.js');
 
+var abi;
 var accounts;
 var creator;
 var buyer;
+
+var contractAddress;
 var contract;
+
+// init BigNumber
+var unit = new BigNumber(Math.pow(10,18));
 
 describe('Smart Contracts', function() {
      before("Initialize everything", function(done) {
@@ -50,10 +57,11 @@ describe('Smart Contracts', function() {
                //console.log('OUTPUT: ');
                //console.log(output);
 
-               var abi = JSON.parse(output.contracts[contractName].interface);
+               abi = JSON.parse(output.contracts[contractName].interface);
                var bytecode = output.contracts[contractName].bytecode;
                var tempContract = web3.eth.contract(abi);
 
+               var alreadyCalled = false;
                tempContract.new(
                     {
                          from: creator, 
@@ -69,20 +77,22 @@ describe('Smart Contracts', function() {
                               console.log('Contract address: ');
                               console.log(result.contractAddress);
 
+                              contractAddress = result.contractAddress;
                               contract = web3.eth.contract(abi).at(result.contractAddress);
 
                               //console.log('Contract: ');
                               //console.log(contract);
 
-                              done();
+                              if(!alreadyCalled){
+                                   done();
+                              }
+                              alreadyCalled = true;
                          });
                     });
           });
      });
 
      it('should get current token price',function(done){
-          var amount = 1;
-
           contract.getCurrentPrice(
                {
                     from: buyer, 
@@ -98,6 +108,27 @@ describe('Smart Contracts', function() {
                     assert.equal(result.toString(10),200);
 
                     done();
+               }
+          );
+     });
+
+     it('should buy some tokens',function(done){
+          var amount = 0.005;
+
+          contract.buyTokens(
+               {
+                    from: buyer,      // buyer
+                    value: web3.toWei(amount, 'ether'),
+                    //gasPrice: 2000000
+               },
+               function(err, result){
+                    assert.equal(err, null);
+
+                    contract.balanceOf(buyer, function(err, result){
+                         assert.equal(err, null);
+                         assert.equal(result.equals(unit.times(new BigNumber(200)).times(new BigNumber(amount))), true);
+                         done();
+                    });
                }
           );
      });
