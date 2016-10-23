@@ -5,6 +5,7 @@ var web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8989"));
 
 var fs = require('fs');
 var assert = require('assert');
+var async = require('async');
 var BigNumber = require('bignumber.js');
 
 var abi;
@@ -17,6 +18,22 @@ var contract;
 
 // init BigNumber
 var unit = new BigNumber(Math.pow(10,18));
+
+
+///////////////////////////////////////////////
+///////////////////////////////////////////////
+function convertDaysToBlocks(days){
+     var secPerBlock = 14;
+     var addBlocks = ((60 * 60 * 24) * days) / secPerBlock;
+
+     return Math.floor(days);
+}
+
+var startBlock =  2491935; // 10-23-2016 10:57 my local time 
+var endBlock   = startBlock + convertDaysToBlocks(10);
+
+console.log('Start block: ' + startBlock);
+console.log('End block: ' + endBlock);
 
 describe('Smart Contracts', function() {
      before("Initialize everything", function(done) {
@@ -63,8 +80,8 @@ describe('Smart Contracts', function() {
 
                var alreadyCalled = false;
 
-               var startBlock = 1477206494;  // Sun, 23 Oct 2016 07:08:14 GMT
-               var endBlock = 1479884887;    // Wed, 23 Nov 2016 07:08:07 GMT
+               //var startDate = 1477206494;  // Sun, 23 Oct 2016 07:08:14 GMT
+               //var endDate = 1479884887;    // Wed, 23 Nov 2016 07:08:07 GMT
 
                tempContract.new(
                     startBlock,
@@ -99,25 +116,55 @@ describe('Smart Contracts', function() {
      });
 
      it('should get current token price',function(done){
-          contract.getCurrentPrice(
-               {
-                    from: buyer, 
-                    gas: 1000000,
+          var next1  = startBlock + convertDaysToBlocks(1);
+          var next10 = startBlock + convertDaysToBlocks(10);
+          var from16 = startBlock + convertDaysToBlocks(17);
+
+          var tests = [
+               // first day - power day
+               {block: startBlock, price: 200},
+
+               // 190 next 14 days
+               {block: next1, price: 190},
+
+               // 190 next 14 days
+               //{block: next10, price: 190},
+
+               // 180 from 16 to 18 days
+               //{block: from16, price: 180}
+          ];
+          
+          async.mapSeries(
+               tests,
+               function(testCase, callback) {
+
+                    contract.getCurrentPrice(
+                         testCase.block,  
+                         {
+                              from: buyer, 
+                              gas: 1000000,
+                         },
+                         function(err, result){
+                              assert.equal(err, null);
+
+                              console.log('Result: ');
+                              console.log(result.toString(10));
+
+                              // 1 ETH = 200 tokens
+                              assert.equal(result.toString(10),testCase.price);
+
+                              callback(err);
+                         }
+                    );
                },
-               function(err, result){
-                    assert.equal(err, null);
 
-                    console.log('Result: ');
-                    console.log(result.toString(10));
-
-                    // 1 ETH = 200 tokens
-                    assert.equal(result.toString(10),200);
-
+               function(err){
                     done();
                }
           );
      });
 
+     /*
      it('should buy some tokens',function(done){
           var amount = 0.005;
 
@@ -138,4 +185,5 @@ describe('Smart Contracts', function() {
                }
           );
      });
+     */
 });

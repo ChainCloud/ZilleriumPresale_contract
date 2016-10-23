@@ -130,8 +130,49 @@ contract StdToken is Token
 
 contract Crowdsale
 {
-    uint public startBlock = 0;
-    uint public endBlock = 0; 
+     uint public startBlock = 0;
+     uint public endBlock = 0; 
+
+     // Please see our whitepaper here - 
+
+     function getCurrentPrice(uint currentBlock) constant returns (uint out)
+     {
+          // 1 ETH is 
+          // 
+          // 200 tokens on the first power day
+          // 190 tokens: days 2 to 15 (14 days total)
+          // 180 tokens: days 16 to 19 (3 days total)
+          // 170 tokens: days 20 to 22 (3 days total)
+          // 160 tokens: days 23 to 26 (3 days total)
+          // 150 tokens: days 27 to 28 (2 days total)
+          // 140 tokens: days 29 to 30 (2 days total)
+
+          out = 200;
+
+          //uint blocksPerDay = (24 * 60 * 60) / 14;
+          uint blocksPerDay = 6171;
+          uint currentIcoDay = (currentBlock - startBlock) / blocksPerDay;
+
+          if(currentIcoDay>=1){
+               out = 190;
+          }
+          if(currentIcoDay>=16){
+               out = 180;
+          }
+          if(currentIcoDay>=20){
+               out = 170;
+          }
+          if(currentIcoDay>=23){
+               out = 160;
+          }
+          if(currentIcoDay>=27){
+               out = 150;
+          }
+          if(currentIcoDay>=29){
+               out = 140;
+          }
+          return;
+     }
 }
 
 contract DaoCasinoToken is SafeMath, StdToken, Crowdsale
@@ -185,20 +226,13 @@ contract DaoCasinoToken is SafeMath, StdToken, Crowdsale
           return;
      }
 
-     function getCurrentPrice() constant returns (uint out)
-     {
-          // 1 ETH = 200 tokens
-          out = 200;
-          return;
-     }
-
      function buyTokens()
      {
           if (msg.value==0) 
                throw;
 
           var to = msg.sender;
-          uint tokens = safeMul(msg.value, getCurrentPrice());
+          uint tokens = safeMul(msg.value, getCurrentPrice(block.number));
           balances[to] = safeAdd(balances[to], tokens);
           supply = safeAdd(supply, tokens);
 
