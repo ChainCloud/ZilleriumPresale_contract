@@ -128,7 +128,13 @@ contract StdToken is Token
      }
 }
 
-contract DaoCasinoToken is SafeMath, StdToken 
+contract Crowdsale
+{
+    uint public startBlock = 0;
+    uint public endBlock = 0; 
+}
+
+contract DaoCasinoToken is SafeMath, StdToken, Crowdsale
 {
 // Events:
      event Buy(address indexed sender, uint eth, uint fbt);
@@ -139,18 +145,39 @@ contract DaoCasinoToken is SafeMath, StdToken
      uint256 public supply = 0;
 
 // Functions:
-     function DaoCasinoToken()  
+     function DaoCasinoToken(uint startBlock_, uint endBlock_)  
      {
           creator = msg.sender;
+
+          startBlock = startBlock_;
+          endBlock = endBlock_;
+     }
+
+     // Do not allow transfers until freeze period is over
+     function transfer(address _to, uint256 _value) returns (bool success) 
+     {
+          if((block.number <= endBlock) && (msg.sender!=creator)) {
+               throw;
+          }
+
+          return super.transfer(_to, _value);
+     }
+     
+     // Do not allow transfers until freeze period is over
+     function transferFrom(address _from, address _to, uint256 _value) returns (bool success) 
+     {
+          if((block.number <= endBlock) && (msg.sender!=creator)) {
+               throw;
+          }
+
+          return super.transferFrom(_from, _to, _value);
      }
 
      function stop(bool _stop)
      {
           if(msg.sender!=creator) throw;
-
           isStop = _stop;
      }
-
 
      function totalSupply() constant returns (uint256 supplyOut) 
      {

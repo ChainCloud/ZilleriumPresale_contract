@@ -62,7 +62,13 @@ describe('Smart Contracts', function() {
                var tempContract = web3.eth.contract(abi);
 
                var alreadyCalled = false;
+
+               var startBlock = 1477206494;  // Sun, 23 Oct 2016 07:08:14 GMT
+               var endBlock = 1479884887;    // Wed, 23 Nov 2016 07:08:07 GMT
+
                tempContract.new(
+                    startBlock,
+                    endBlock,
                     {
                          from: creator, 
                          gas: 3000000, 
