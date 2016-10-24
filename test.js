@@ -12,6 +12,9 @@ var abi;
 var accounts;
 var creator;
 var buyer;
+var foundation;
+var founders;
+var devs;
 
 var contractAddress;
 var contract;
@@ -51,6 +54,10 @@ describe('Smart Contracts', function() {
                creator = accounts[0];
                buyer = accounts[1];
 
+               foundation = creator;
+               founders = accounts[2];
+               devs = accounts[3];
+
                done();
           });
      });
@@ -86,6 +93,9 @@ describe('Smart Contracts', function() {
                tempContract.new(
                     startBlock,
                     endBlock,
+                    foundation,
+                    founders,
+                    devs,
                     {
                          from: creator, 
                          gas: 3000000, 

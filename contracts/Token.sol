@@ -128,10 +128,30 @@ contract StdToken is Token
      }
 }
 
-contract Crowdsale
+contract Crowdsale is StdToken, SafeMath
 {
      uint public startBlock = 0;
      uint public endBlock = 0; 
+
+     uint256 public allSupply = 0;
+     uint public presaleTokenSupply = 0; //this will keep track of the token supply created during the crowdsale
+     uint public presaleEtherRaised = 0; //this will keep track of the Ether raised during the crowdsale
+
+     bool rewardAllocated = false;
+
+     // 10% - to the Foundation of the DAO.Casino platform
+     // 10% - founders’ reward
+     // 1%  - to RNG imlementers 
+     // 4%  - game dev.teams 
+     // 75% - will be sold during crowdsale
+     uint public foundationAllocation = 10 * 10**16; 
+     uint public foundersAllocation = 10 * 10**16; 
+     uint public devsAllocation = 5 * 10**16;
+
+     address public creator = 0x0;
+     address public founders = 0x0;
+     address public foundation = 0x0;
+     address public devs = 0x0;
 
      // Please see our whitepaper for details
      // The default block time is 14 seconds. See - https://etherscan.io/charts/blocktime
@@ -146,7 +166,6 @@ contract Crowdsale
           // 160 tokens: days 23 to 26 (3 days total)
           // 150 tokens: days 27 to 28 (2 days total)
           // 140 tokens: days 29 to 30 (2 days total)
-
           out = 200;
 
           //uint blocksPerDay = (24 * 60 * 60) / 14;
@@ -173,28 +192,59 @@ contract Crowdsale
           }
           return;
      }
+
+     function allocateRewardTokens() 
+     {
+          // Only by creator
+          if(msg.sender!=creator) throw;
+          // This method should be called after ICO ends
+          if(block.number<=endBlock) throw;
+          // Only once
+          if(rewardAllocated) throw;
+
+          presaleTokenSupply = allSupply;
+
+          // Founders 
+          var foundersReward = presaleTokenSupply * foundersAllocation / (1 ether);
+          balances[founders] = safeAdd(balances[founders], foundersReward);
+          allSupply = safeAdd(allSupply, foundersReward);
+
+          // Foundation
+          var foundationReward = presaleTokenSupply * foundationAllocation / (1 ether);
+          balances[foundation] = safeAdd(balances[foundation], foundationReward);
+          allSupply = safeAdd(allSupply, foundationReward);
+
+          // Devs
+          var devsReward = presaleTokenSupply * devsAllocation / (1 ether);
+          balances[devs] = safeAdd(balances[devs], devsReward);
+          allSupply = safeAdd(allSupply, devsReward);
+
+          rewardAllocated = true;
+     }
 }
 
-contract DaoCasinoToken is SafeMath, StdToken, Crowdsale
+contract DaoCasinoToken is Crowdsale
 {
 // Events:
      event Buy(address indexed sender, uint eth, uint fbt);
 
 // Fields:
-     address public creator = 0x0;
      bool public isStop = false;
-     uint256 public supply = 0;
 
 // Functions:
-     function DaoCasinoToken(uint startBlock_, uint endBlock_)  
+     function DaoCasinoToken(uint startBlock_, uint endBlock_, 
+          address foundation_, address founders_, address devs_)  
      {
           creator = msg.sender;
 
           startBlock = startBlock_;
           endBlock = endBlock_;
+
+          foundation = foundation_;
+          founders = founders_;
+          devs = devs_;
      }
 
-     // Do not allow transfers until freeze period is over
      function transfer(address _to, uint256 _value) returns (bool success) 
      {
           if((block.number <= endBlock) && (msg.sender!=creator)) {
@@ -204,7 +254,6 @@ contract DaoCasinoToken is SafeMath, StdToken, Crowdsale
           return super.transfer(_to, _value);
      }
      
-     // Do not allow transfers until freeze period is over
      function transferFrom(address _from, address _to, uint256 _value) returns (bool success) 
      {
           if((block.number <= endBlock) && (msg.sender!=creator)) {
@@ -222,7 +271,7 @@ contract DaoCasinoToken is SafeMath, StdToken, Crowdsale
 
      function totalSupply() constant returns (uint256 supplyOut) 
      {
-          supplyOut = supply;
+          supplyOut = allSupply;
           return;
      }
 
@@ -234,14 +283,16 @@ contract DaoCasinoToken is SafeMath, StdToken, Crowdsale
           var to = msg.sender;
           uint tokens = safeMul(msg.value, getCurrentPrice(block.number));
           balances[to] = safeAdd(balances[to], tokens);
-          supply = safeAdd(supply, tokens);
 
+          allSupply = safeAdd(allSupply, tokens);
+
+          // TODO: 
           //creator.call.value(msg.value)();
 
           Buy(to, msg.value, tokens);
      }
 
-     /// This function is called when someone send money to this contract directly.
+     /// This function is called when someone sends money to this contract directly.
      function() 
      {
           throw;
