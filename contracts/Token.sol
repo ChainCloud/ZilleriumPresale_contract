@@ -133,8 +133,8 @@ contract Crowdsale
      uint public startBlock = 0;
      uint public endBlock = 0; 
 
-     // Please see our whitepaper here - 
-
+     // Please see our whitepaper for details
+     // The default block time is 14 seconds. See - https://etherscan.io/charts/blocktime
      function getCurrentPrice(uint currentBlock) constant returns (uint out)
      {
           // 1 ETH is 
@@ -151,7 +151,7 @@ contract Crowdsale
 
           //uint blocksPerDay = (24 * 60 * 60) / 14;
           uint blocksPerDay = 6171;
-          uint currentIcoDay = (currentBlock - startBlock) / blocksPerDay;
+          uint currentIcoDay = uint((currentBlock - startBlock) / blocksPerDay);
 
           if(currentIcoDay>=1){
                out = 190;

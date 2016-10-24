@@ -26,7 +26,7 @@ function convertDaysToBlocks(days){
      var secPerBlock = 14;
      var addBlocks = ((60 * 60 * 24) * days) / secPerBlock;
 
-     return Math.floor(days);
+     return Math.floor(addBlocks);
 }
 
 var startBlock =  2491935; // 10-23-2016 10:57 my local time 
@@ -119,27 +119,48 @@ describe('Smart Contracts', function() {
           var next1  = startBlock + convertDaysToBlocks(1);
           var next10 = startBlock + convertDaysToBlocks(10);
           var from16 = startBlock + convertDaysToBlocks(17);
+          var from20 = startBlock + convertDaysToBlocks(21);
+          var from23 = startBlock + convertDaysToBlocks(24);
+          var from27 = startBlock + convertDaysToBlocks(28);
+          var from29 = startBlock + convertDaysToBlocks(29);
+          var from30 = startBlock + convertDaysToBlocks(29);
+
 
           var tests = [
                // first day - power day
-               {block: startBlock, price: 200},
+               {addDays: 0, price: 200},
 
                // 190 next 14 days
-               {block: next1, price: 190},
-
-               // 190 next 14 days
-               //{block: next10, price: 190},
+               {addDays: 1, price: 190},
+               {addDays: 10, price: 190},
 
                // 180 from 16 to 18 days
-               //{block: from16, price: 180}
+               {addDays: 17, price: 180},
+               // 170 tokens: days 20 to 22 (3 days total)
+               {addDays: 21, price: 170},
+               // 160 tokens: days 23 to 26 (3 days total)
+               {addDays: 24, price: 160},
+               // 150 tokens: days 27 to 28 (2 days total)
+               {addDays: 28, price: 150},
+               // 140 tokens: days 29 to 30 (2 days total)
+               {addDays: 29, price: 140},
+               // 140 tokens: days 29 to 30 (2 days total)
+               {addDays: 30, price: 140},
+               {addDays: 31, price: 140},
+               {addDays: 40, price: 140},
           ];
           
+          console.log('Starting block: ' + startBlock);
+
           async.mapSeries(
                tests,
                function(testCase, callback) {
+                    var thisBlock = startBlock + convertDaysToBlocks(testCase.addDays);
+                    console.log('Testing price for block: ' + thisBlock);
 
                     contract.getCurrentPrice(
-                         testCase.block,  
+                         thisBlock,
+
                          {
                               from: buyer, 
                               gas: 1000000,
@@ -150,9 +171,7 @@ describe('Smart Contracts', function() {
                               console.log('Result: ');
                               console.log(result.toString(10));
 
-                              // 1 ETH = 200 tokens
                               assert.equal(result.toString(10),testCase.price);
-
                               callback(err);
                          }
                     );

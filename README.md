@@ -7,7 +7,7 @@
 
 To start TestRPC:
 ```bash
-node_modules/.bin/testrpc --port 8989 
+node_modules/.bin/testrpc --port 8989 --gasLimit 10000000
 ```
 
 To run tests:
