@@ -152,6 +152,7 @@ contract Crowdsale is StdToken, SafeMath
      address public founders = 0x0;
      address public foundation = 0x0;
      address public devs = 0x0;
+     address public daoFund = 0x0;
 
      // Please see our whitepaper for details
      // The default block time is 14 seconds. See - https://etherscan.io/charts/blocktime
@@ -233,6 +234,7 @@ contract DaoCasinoToken is Crowdsale
 
 // Functions:
      function DaoCasinoToken(uint startBlock_, uint endBlock_, 
+          address daoFund_,
           address foundation_, address founders_, address devs_)  
      {
           creator = msg.sender;
@@ -240,6 +242,7 @@ contract DaoCasinoToken is Crowdsale
           startBlock = startBlock_;
           endBlock = endBlock_;
 
+          daoFund = daoFund_;
           foundation = foundation_;
           founders = founders_;
           devs = devs_;
@@ -277,20 +280,30 @@ contract DaoCasinoToken is Crowdsale
 
      function buyTokens()
      {
-          if (msg.value==0) 
-               throw;
+          address to = msg.sender;
+          buyTokensFor(to);
+     }
 
-          var to = msg.sender;
+     function buyTokensFor(address to)
+     {
+          if (msg.value==0) throw;
+          if(isStop) throw;
+
           uint tokens = safeMul(msg.value, getCurrentPrice(block.number));
           balances[to] = safeAdd(balances[to], tokens);
 
           allSupply = safeAdd(allSupply, tokens);
 
-          // TODO: 
-          //creator.call.value(msg.value)();
+          // 50% of the resulting Eth CrowdSale will be invested in the creation of «DAO.Casino Platform». 
+          // 50% of the resulting Eth CrowdSale goes to the DAO fund
+          uint half = uint(msg.value / 2);
+          daoFund.call.value(half)();
+          foundation.call.value(msg.value - half)();
 
           Buy(to, msg.value, tokens);
      }
+
+     // TODO: trapdoor
 
      /// This function is called when someone sends money to this contract directly.
      function() 

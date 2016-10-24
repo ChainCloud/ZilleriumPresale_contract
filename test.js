@@ -15,13 +15,16 @@ var buyer;
 var foundation;
 var founders;
 var devs;
+var daoFund;
 
 var contractAddress;
 var contract;
 
+var startBlock;
+var endBlock;
+
 // init BigNumber
 var unit = new BigNumber(Math.pow(10,18));
-
 
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////
@@ -31,12 +34,6 @@ function convertDaysToBlocks(days){
 
      return Math.floor(addBlocks);
 }
-
-var startBlock =  2491935; // 10-23-2016 10:57 my local time 
-var endBlock   = startBlock + convertDaysToBlocks(10);
-
-console.log('Start block: ' + startBlock);
-console.log('End block: ' + endBlock);
 
 describe('Smart Contracts', function() {
      before("Initialize everything", function(done) {
@@ -57,8 +54,20 @@ describe('Smart Contracts', function() {
                foundation = creator;
                founders = accounts[2];
                devs = accounts[3];
+               daoFund = accounts[4];
+               
+               web3.eth.getBlockNumber(function(err,result){
+                    assert.equal(err,null);
 
-               done();
+                    //var startBlock =  2491935; // 10-23-2016 10:57 my local time 
+                    startBlock =  result; 
+                    endBlock   = startBlock + convertDaysToBlocks(10);
+
+                    console.log('Start block: ' + startBlock);
+                    console.log('End block: ' + endBlock);
+
+                    done();
+               });
           });
      });
 
@@ -93,6 +102,9 @@ describe('Smart Contracts', function() {
                tempContract.new(
                     startBlock,
                     endBlock,
+
+                    daoFund,
+
                     foundation,
                     founders,
                     devs,
@@ -193,26 +205,50 @@ describe('Smart Contracts', function() {
           );
      });
 
-     /*
      it('should buy some tokens',function(done){
           var amount = 0.005;
 
-          contract.buyTokens(
+          var priceShouldBe = 200;
+          var shouldBe = (amount * priceShouldBe);  // current price
+
+          contract.getCurrentPrice(
+               startBlock,
+
                {
-                    from: buyer,      // buyer
-                    value: web3.toWei(amount, 'ether'),
-                    //gasPrice: 2000000
+                    from: buyer, 
+                    gas: 1000000,
                },
                function(err, result){
                     assert.equal(err, null);
+                    assert.equal(result.toString(10),priceShouldBe);
 
-                    contract.balanceOf(buyer, function(err, result){
-                         assert.equal(err, null);
-                         assert.equal(result.equals(unit.times(new BigNumber(200)).times(new BigNumber(amount))), true);
-                         done();
-                    });
+                    contract.buyTokens(
+                         {
+                              from: buyer,      // buyer
+                              value: web3.toWei(amount, 'ether'),
+                              //gasPrice: 2000000
+                         },
+                         function(err, result){
+                              assert.equal(err, null);
+
+                              contract.balanceOf(buyer, function(err, result){
+                                   assert.equal(err, null);
+
+                                   console.log('Result: ');
+                                   console.log(result.toString(10));
+
+                                   assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(amount))), true);
+                                   done();
+                              });
+                         }
+                    );
                }
           );
      });
-     */
+
+     // TODO: 
+     // Test halting, buying, and failing
+     // Test buying on behalf of a recipient
+     // Test unhalting, buying, and succeeding
+     // Test buying after the sale ends
 });
