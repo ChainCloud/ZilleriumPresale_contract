@@ -1,3 +1,4 @@
+var sleep = require('sleep');
 var solc = require('solc');
 var Web3 = require('web3');
 //var web3 = new Web3(new Web3.providers.HttpProvider("http://52.16.72.86:8545"));
@@ -138,6 +139,8 @@ describe('Smart Contracts', function() {
      });
 
      it('should get current token price',function(done){
+          sleep.sleep(2);
+
           var next1  = startBlock + convertDaysToBlocks(1);
           var next10 = startBlock + convertDaysToBlocks(10);
           var from16 = startBlock + convertDaysToBlocks(17);
@@ -246,6 +249,22 @@ describe('Smart Contracts', function() {
           );
      });
 
+     it('should fail if <stop> is called by creator',function(done){
+          contract.stop(
+               true,
+               {
+                    from: buyer,
+                    //gas: 3000000, 
+                    //gasPrice: 2000000
+               },
+
+               function(err,result){
+                    assert.notEqual(err,null);
+                    done();
+               }
+          );
+     });
+
      // Test stopping, buying, and failing
      it('should stop ',function(done){
           var amount = 0.005;
@@ -286,7 +305,58 @@ describe('Smart Contracts', function() {
           );
      });
 
-     // Test buying on behalf of a recipient
+     it('should enable calls',function(done){
+          contract.stop(
+               false,
+               {
+                    from: creator,
+                    //gas: 3000000, 
+                    //gasPrice: 2000000
+               },
+
+               function(err,result){
+                    assert.equal(err,null);
+
+                    done();
+               }
+          );
+     });
+
+     it('should buy some tokens on behalf of user3',function(done){
+
+          var priceShouldBe = 200;
+
+          // accounts[2]
+          var amount = 0.015;
+          var amountWas = 0.005;
+
+          contract.buyTokensFor(
+               buyer,
+               {
+                    from: accounts[2],
+                    value: web3.toWei(amount, 'ether'),
+                    //gasPrice: 2000000
+               },
+               function(err, result){
+                    assert.equal(err, null);
+
+                    contract.balanceOf(buyer, function(err, result){
+                         assert.equal(err, null);
+
+                         assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(amount + amountWas))), true);
+
+
+                         contract.balanceOf(accounts[2], function(err, result){
+                              assert.equal(err, null);
+
+                              assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(0))), true);
+                              done();
+                         });
+                    });
+               }
+          );
+     });
+
      // Test unhalting, buying, and succeeding
      // Test buying after the sale ends
 });
