@@ -246,8 +246,46 @@ describe('Smart Contracts', function() {
           );
      });
 
-     // TODO: 
-     // Test halting, buying, and failing
+     // Test stopping, buying, and failing
+     it('should stop ',function(done){
+          var amount = 0.005;
+
+          var priceShouldBe = 200;
+          var shouldBe = (amount * priceShouldBe);  // current price
+
+          contract.stop(
+               true,
+               {
+                    from: creator,
+                    //gas: 3000000, 
+                    //gasPrice: 2000000
+               },
+
+               function(err,result){
+                    assert.equal(err,null);
+
+                    contract.buyTokens(
+                         {
+                              from: buyer,      // buyer
+                              value: web3.toWei(amount, 'ether'),
+                              //gasPrice: 2000000
+                         },
+                         function(err, result){
+                              assert.notEqual(err, null);
+
+                              contract.balanceOf(buyer, function(err, result){
+                                   assert.equal(err, null);
+
+                                   // balance should not be changed...
+                                   assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(amount))), true);
+                                   done();
+                              });
+                         }
+                    );
+               }
+          );
+     });
+
      // Test buying on behalf of a recipient
      // Test unhalting, buying, and succeeding
      // Test buying after the sale ends
