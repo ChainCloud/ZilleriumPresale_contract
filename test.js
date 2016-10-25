@@ -62,7 +62,7 @@ describe('Smart Contracts', function() {
 
                     //var startBlock =  2491935; // 10-23-2016 10:57 my local time 
                     startBlock =  result; 
-                    endBlock   = startBlock + convertDaysToBlocks(10);
+                    endBlock   = startBlock + convertDaysToBlocks(100);
 
                     console.log('Start block: ' + startBlock);
                     console.log('End block: ' + endBlock);
@@ -99,8 +99,12 @@ describe('Smart Contracts', function() {
 
                //var startDate = 1477206494;  // Sun, 23 Oct 2016 07:08:14 GMT
                //var endDate = 1479884887;    // Wed, 23 Nov 2016 07:08:07 GMT
+               
+               var isTestContract = true;
 
                tempContract.new(
+                    isTestContract,
+
                     startBlock,
                     endBlock,
 
@@ -257,7 +261,6 @@ describe('Smart Contracts', function() {
                     //gas: 3000000, 
                     //gasPrice: 2000000
                },
-
                function(err,result){
                     assert.notEqual(err,null);
                     done();
@@ -357,6 +360,71 @@ describe('Smart Contracts', function() {
           );
      });
 
-     // Test unhalting, buying, and succeeding
+     it('should not allow allocate reward before ICO ends',function(done){
+          contract.allocateRewardTokens(
+               {
+                    from: creator,
+                    gas: 3000000
+               },
+               function(err, result){
+                    assert.notEqual(err, null);
+
+                    done();
+               }
+          );
+     });
+
+     // sale ends...
+     if('should set block num (for tests only)',function(done){
+          var newBlockNum = endBlock + 1;    // plus one is just to make sure...
+
+          contract.setBlockNumber(
+               newBlockNum,
+               {
+                    from: buyer,
+                    gas: 3000000
+               },
+               function(err, result){
+                    assert.equal(err, null);
+
+                    done();
+               }
+          );
+     });
+
+     it('should not allow to buy more tokens after ICO ended',function(done){
+          var amount = 0.005;
+          contract.buyTokens(
+               {
+                    from: buyer,      // buyer
+                    value: web3.toWei(amount, 'ether'),
+                    //gasPrice: 2000000
+               },
+               function(err, result){
+                    assert.notEqual(err, null);
+                    done();
+               }
+          );
+     });
+
+
+     // TODO: uncomment
+     /*
+     it('should not allow allocate reward if called not by creator',function(done){
+          contract.allocateRewardTokens(
+               {
+                    from: buyer,
+                    gas: 3000000
+               },
+               function(err, result){
+                    assert.notEqual(err, null);
+
+                    done();
+               }
+          );
+     });
+     */
+
+     // TODO:
      // Test buying after the sale ends
 });

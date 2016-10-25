@@ -130,14 +130,21 @@ contract StdToken is Token
 
 contract Crowdsale is StdToken, SafeMath
 {
-     uint public startBlock = 0;
-     uint public endBlock = 0; 
+// Fields:
+     // Will allow changing the block number if set to true
+     bool public isTestContract = false;
+     uint public blockNumber = 0;  // only if isTestContract
+     bool public isStop = false;
 
      uint256 public allSupply = 0;
      uint public presaleTokenSupply = 0; //this will keep track of the token supply created during the crowdsale
      uint public presaleEtherRaised = 0; //this will keep track of the Ether raised during the crowdsale
 
      bool rewardAllocated = false;
+
+// Parameters:
+     uint public startBlock = 0;
+     uint public endBlock = 0; 
 
      // 10% - to the Foundation of the DAO.Casino platform
      // 10% - founders’ reward
@@ -194,12 +201,25 @@ contract Crowdsale is StdToken, SafeMath
           return;
      }
 
+     function getCurrentBlock()constant returns(uint blockOut)
+     {
+          if(isTestContract)
+          {
+               // return block number that we passed here from tests...
+               blockOut = blockNumber;
+               return;
+          }
+
+          blockOut = block.number;
+          return;
+     }
+
      function allocateRewardTokens() 
      {
           // Only by creator
           if(msg.sender!=creator) throw;
           // This method should be called after ICO ends
-          if(block.number<=endBlock) throw;
+          if(getCurrentBlock()<=endBlock) throw;
           // Only once
           if(rewardAllocated) throw;
 
@@ -229,17 +249,23 @@ contract DaoCasinoToken is Crowdsale
 // Events:
      event Buy(address indexed sender, uint eth, uint fbt);
 
-// Fields:
-     bool public isStop = false;
 
 // Functions:
-     function DaoCasinoToken(uint startBlock_, uint endBlock_, 
+     function DaoCasinoToken(
+          bool isTestContract_,
+          uint startBlock_, uint endBlock_, 
           address daoFund_,
           address foundation_, address founders_, address devs_)  
      {
           creator = msg.sender;
+          
+          isTestContract = isTestContract_;
 
           startBlock = startBlock_;
+          if(isTestContract)
+          {
+               blockNumber = startBlock;     // for tests only...
+          }
           endBlock = endBlock_;
 
           daoFund = daoFund_;
@@ -250,7 +276,7 @@ contract DaoCasinoToken is Crowdsale
 
      function transfer(address _to, uint256 _value) returns (bool success) 
      {
-          if((block.number <= endBlock) && (msg.sender!=creator)) {
+          if((getCurrentBlock() <= endBlock) && (msg.sender!=creator)) {
                throw;
           }
 
@@ -259,7 +285,7 @@ contract DaoCasinoToken is Crowdsale
      
      function transferFrom(address _from, address _to, uint256 _value) returns (bool success) 
      {
-          if((block.number <= endBlock) && (msg.sender!=creator)) {
+          if((getCurrentBlock() <= endBlock) && (msg.sender!=creator)) {
                throw;
           }
 
@@ -289,7 +315,7 @@ contract DaoCasinoToken is Crowdsale
           if (msg.value==0) throw;
           if(isStop) throw;
 
-          uint tokens = safeMul(msg.value, getCurrentPrice(block.number));
+          uint tokens = safeMul(msg.value, getCurrentPrice(getCurrentBlock()));
           balances[to] = safeAdd(balances[to], tokens);
 
           allSupply = safeAdd(allSupply, tokens);
@@ -301,6 +327,15 @@ contract DaoCasinoToken is Crowdsale
           foundation.call.value(msg.value - half)();
 
           Buy(to, msg.value, tokens);
+     }
+
+     //FOR TESTING PURPOSES:
+     function setBlockNum(uint blockNum) {
+          if(msg.sender!=creator) throw;
+
+          if(!isTestContract) throw;
+
+          blockNumber = blockNum;
      }
 
      // TODO: trapdoor
