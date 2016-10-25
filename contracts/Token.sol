@@ -314,6 +314,7 @@ contract DaoCasinoToken is Crowdsale
      {
           if (msg.value==0) throw;
           if(isStop) throw;
+          if((getCurrentBlock()<startBlock) || (getCurrentBlock()>endBlock)) throw;
 
           uint tokens = safeMul(msg.value, getCurrentPrice(getCurrentBlock()));
           balances[to] = safeAdd(balances[to], tokens);

@@ -62,7 +62,7 @@ describe('Smart Contracts', function() {
 
                     //var startBlock =  2491935; // 10-23-2016 10:57 my local time 
                     startBlock =  result; 
-                    endBlock   = startBlock + convertDaysToBlocks(100);
+                    endBlock   = startBlock + convertDaysToBlocks(35);
 
                     console.log('Start block: ' + startBlock);
                     console.log('End block: ' + endBlock);
@@ -378,10 +378,11 @@ describe('Smart Contracts', function() {
      if('should set block num (for tests only)',function(done){
           var newBlockNum = endBlock + 1;    // plus one is just to make sure...
 
+          console.log('Setting current block number: ' + newBlockNum);
           contract.setBlockNumber(
                newBlockNum,
                {
-                    from: buyer,
+                    from: creator,
                     gas: 3000000
                },
                function(err, result){
