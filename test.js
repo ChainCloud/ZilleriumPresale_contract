@@ -374,6 +374,20 @@ describe('Smart Contracts', function() {
           );
      });
 
+     it('should not allow to allocate reward before ICO ends',function(done){
+          contract.allocateRewardTokens(
+               {
+                    from: creator,
+                    gas: 3000000
+               },
+               function(err, result){
+                    assert.notEqual(err, null);
+
+                    done();
+               }
+          );
+     });
+
      // sale ends...
      it('should set block num (for tests only)',function(done){
           var newBlockNum = endBlock + 1;    // plus one is just to make sure...
