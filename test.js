@@ -18,6 +18,7 @@ var founders;
 var devs;
 var daoFund;
 
+var initialFoundersBalance;
 var initialBuyerBalance;
 
 var contractAddress;
@@ -84,6 +85,15 @@ describe('Smart Contracts', function() {
 
           console.log('Buyer initial balance is: ');
           console.log(initialBuyerBalance.toString(10));
+
+          done();
+     });
+
+     it('should get founders initial balance',function(done){
+          initialFoundersBalance = web3.eth.getBalance(founders);
+
+          console.log('Founders initial balance: ');
+          console.log(initialFoundersBalance.toString(10));
 
           done();
      });
@@ -224,6 +234,19 @@ describe('Smart Contracts', function() {
           );
      });
 
+     it('should get correct initial total supply',function(done){
+          contract.totalSupply(function(err, result){
+               assert.equal(err, null);
+
+               console.log('Initial token supply: ');
+               console.log(result.toString(10));
+
+               assert.equal(result.toString(10),0);
+
+               done();
+          });
+     });
+
      it('should buy some tokens',function(done){
           var amount = 0.005;
 
@@ -257,7 +280,14 @@ describe('Smart Contracts', function() {
                                    console.log(result.toString(10));
 
                                    assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(amount))), true);
-                                   done();
+
+                                   contract.totalSupply(function(err, result){
+                                        assert.equal(err, null);
+
+                                        assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(amount))), true);
+
+                                        done();
+                                   });
                               });
                          }
                     );
@@ -384,6 +414,7 @@ describe('Smart Contracts', function() {
           console.log(diff.toString(10));
 
           // diff includes Gas fees
+          // 0.005 ETH
           assert.equal((diff.toString() >= 5000000000000000) && (diff.toString() <= 5000000100000000),true);
 
           done();
@@ -403,18 +434,22 @@ describe('Smart Contracts', function() {
           );
      });
 
-     it('should not allow to allocate reward before ICO ends',function(done){
-          contract.allocateRewardTokens(
-               {
-                    from: creator,
-                    gas: 3000000
-               },
-               function(err, result){
-                    assert.notEqual(err, null);
+     it('should get correct total supply before ICO ends',function(done){
+          contract.totalSupply(function(err, result){
+               assert.equal(err, null);
 
-                    done();
-               }
-          );
+               console.log('Total token supply: ');
+               console.log(result.toString(10));
+
+               var priceShouldBe = 200;
+
+               var one = 0.005;
+               var two = 0.015;
+               var shouldBeTotal = one + two;
+
+               assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(shouldBeTotal))), true);
+               done();
+          });
      });
 
      // sale ends...
@@ -435,29 +470,6 @@ describe('Smart Contracts', function() {
                }
           );
      });
-
-     /*
-     it('should get block num (for tests only)',function(done){
-          var newBlockNum = endBlock + 1;    // plus one is just to make sure...
-
-          contract.getCurrentBlock(
-               {
-                    from: creator,
-                    gas: 3000000
-               },
-               function(err, result){
-                    assert.equal(err, null);
-
-                    console.log('Got current block number: ');
-                    console.log(result.toString(10));
-
-                    //assert.equal(result.toString(10),newBlockNum);
-
-                    done();
-               }
-          );
-     });
-     */
 
      it('should not allow to buy more tokens after ICO ended',function(done){
           var amount = 0.005;
@@ -501,5 +513,57 @@ describe('Smart Contracts', function() {
                }
           );
      });
+
+     it('should get founders reward balance',function(done){
+          var balance = web3.eth.getBalance(founders);
+
+          console.log('Founders balance after reward allocated: ');
+          console.log(balance.toString(10));
+
+          var diff = initialFoundersBalance - balance;
+
+          console.log('Diff: ');
+          console.log(diff.toString(10));
+
+          // TODO: 15000000000049152 is 0.015 ETH. Too much... 
+
+          done();
+     });
+
+     /*
+     it('should get correct total supply after ICO',function(done){
+          contract.totalSupply(function(err, result){
+               assert.equal(err, null);
+
+               console.log('Total token supply: ');
+               console.log(result.toString(10));
+
+               var priceShouldBe = 200;
+
+               var one = 0.005;
+               var two = 0.015;
+               var shouldBeTotal = one + two;
+
+               assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(shouldBeTotal))), true);
+               done();
+          });
+     });
+     */
+
+     // TODO:
+     /*
+     it('should get correct founders token balance',function(done){
+
+          contract.balanceOf(founders, function(err, result){
+               assert.equal(err, null);
+
+               console.log('Founders token balance: ');
+               console.log(result.toString(10));
+
+               assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(amount))), true);
+               done();
+          });
+     });
+     */
 
 });
