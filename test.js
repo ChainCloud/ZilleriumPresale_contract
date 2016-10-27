@@ -375,7 +375,7 @@ describe('Smart Contracts', function() {
      });
 
      // sale ends...
-     if('should set block num (for tests only)',function(done){
+     it('should set block num (for tests only)',function(done){
           var newBlockNum = endBlock + 1;    // plus one is just to make sure...
 
           console.log('Setting current block number: ' + newBlockNum);
@@ -393,6 +393,29 @@ describe('Smart Contracts', function() {
           );
      });
 
+     /*
+     it('should get block num (for tests only)',function(done){
+          var newBlockNum = endBlock + 1;    // plus one is just to make sure...
+
+          contract.getCurrentBlock(
+               {
+                    from: creator,
+                    gas: 3000000
+               },
+               function(err, result){
+                    assert.equal(err, null);
+
+                    console.log('Got current block number: ');
+                    console.log(result.toString(10));
+
+                    //assert.equal(result.toString(10),newBlockNum);
+
+                    done();
+               }
+          );
+     });
+     */
+
      it('should not allow to buy more tokens after ICO ended',function(done){
           var amount = 0.005;
           contract.buyTokens(
@@ -408,9 +431,6 @@ describe('Smart Contracts', function() {
           );
      });
 
-
-     // TODO: uncomment
-     /*
      it('should not allow allocate reward if called not by creator',function(done){
           contract.allocateRewardTokens(
                {
@@ -424,8 +444,20 @@ describe('Smart Contracts', function() {
                }
           );
      });
-     */
 
-     // TODO:
-     // Test buying after the sale ends
+     it('should allow to allocate reward',function(done){
+          contract.allocateRewardTokens(
+               {
+                    from: creator,
+                    gas: 3000000
+               },
+               function(err, result){
+                    assert.equal(err, null);
+
+                    done();
+               }
+          );
+     });
+
+     // TODO: check rewards...
 });

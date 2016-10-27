@@ -201,7 +201,7 @@ contract Crowdsale is StdToken, SafeMath
           return;
      }
 
-     function getCurrentBlock()constant returns(uint blockOut)
+     function getCurrentBlock()returns(uint blockOut)
      {
           if(isTestContract)
           {
@@ -331,7 +331,7 @@ contract DaoCasinoToken is Crowdsale
      }
 
      //FOR TESTING PURPOSES:
-     function setBlockNum(uint blockNum) {
+     function setBlockNumber(uint blockNum) {
           if(msg.sender!=creator) throw;
 
           if(!isTestContract) throw;

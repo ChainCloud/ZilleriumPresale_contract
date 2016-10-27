@@ -1,5 +1,5 @@
 #! /bin/bash
 
-mocha --reporter spec -t 10000 
+mocha --reporter spec -t 20000 
 
 #-g "Some tests"
