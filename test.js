@@ -18,6 +18,8 @@ var founders;
 var devs;
 var daoFund;
 
+var initialBuyerBalance;
+
 var contractAddress;
 var contract;
 
@@ -73,6 +75,16 @@ describe('Smart Contracts', function() {
      });
 
      after("Deinitialize everything", function(done) {
+          done();
+     });
+
+
+     it('should get buyer initial balance',function(done){
+          initialBuyerBalance = web3.eth.getBalance(buyer);
+
+          console.log('Buyer initial balance is: ');
+          console.log(initialBuyerBalance.toString(10));
+
           done();
      });
 
@@ -360,6 +372,23 @@ describe('Smart Contracts', function() {
           );
      });
 
+     it('buyers balance should be reduced',function(done){
+          var balance = web3.eth.getBalance(buyer);
+
+          console.log('Buyer balance: ');
+          console.log(balance.toString(10));
+          
+          var diff = initialBuyerBalance - balance;
+
+          console.log('Diff: ');
+          console.log(diff.toString(10));
+
+          // diff includes Gas fees
+          assert.equal((diff.toString() >= 5000000000000000) && (diff.toString() <= 5000000100000000),true);
+
+          done();
+     });
+
      it('should not allow allocate reward before ICO ends',function(done){
           contract.allocateRewardTokens(
                {
@@ -473,5 +502,4 @@ describe('Smart Contracts', function() {
           );
      });
 
-     // TODO: check rewards...
 });
