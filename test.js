@@ -700,8 +700,6 @@ describe('Smart Contracts', function() {
           contract.balanceOf(foundation, function(err, result){
                assert.equal(err, null);
 
-               var priceShouldBe = 200;
-
                // 10%
                var totalSupplyShouldBe = getTotalSupplyShouldBe();
                var percent = 0.10;
@@ -717,8 +715,6 @@ describe('Smart Contracts', function() {
      it('should get correct founders token balance after ICO',function(done){
           contract.balanceOf(founders, function(err, result){
                assert.equal(err, null);
-
-               var priceShouldBe = 200;
 
                // 10%
                var totalSupplyShouldBe = getTotalSupplyShouldBe();
@@ -736,8 +732,6 @@ describe('Smart Contracts', function() {
           contract.balanceOf(devs, function(err, result){
                assert.equal(err, null);
 
-               var priceShouldBe = 200;
-
                // 5%
                var totalSupplyShouldBe = getTotalSupplyShouldBe();
                var percent = 0.05;
@@ -750,9 +744,6 @@ describe('Smart Contracts', function() {
           });
      });
 
-     /*
-     // TODO: uncomment
-
      it('should get correct total supply after ICO',function(done){
           contract.totalSupply(function(err, result){
                assert.equal(err, null);
@@ -760,16 +751,12 @@ describe('Smart Contracts', function() {
                console.log('Total token supply after ICO: ');
                console.log(result.toString(10));
 
-               var priceShouldBe = 200;
+               var totalSupplyShouldBe = getTotalSupplyShouldBe();
+               // additional 25%
+               var percent = 1.25;
 
-               var one = 0.005;
-               var two = 0.015;
-               var shouldBeTotal = one + two;
-
-               assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(shouldBeTotal))), true);
+               assert.equal(result, totalSupplyShouldBe * percent);
                done();
           });
      });
-     */
-
 });
