@@ -34,6 +34,14 @@ var unit = new BigNumber(Math.pow(10,18));
 
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////
+function getTotalSupplyShouldBe(){
+     var priceShouldBe = 200;
+     var one = 0.005;
+     var two = 0.015;
+
+     return unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(one + two));
+}
+
 function convertDaysToBlocks(days){
      var secPerBlock = 14;
      var addBlocks = ((60 * 60 * 24) * days) / secPerBlock;
@@ -601,11 +609,9 @@ describe('Smart Contracts', function() {
           contract.totalSupply(function(err, result){
                assert.equal(err, null);
 
-               var priceShouldBe = 200;
-               var one = 0.005;
-               var two = 0.015;
+               var totalSupplyShouldBe = getTotalSupplyShouldBe();
 
-               var totalSupplyShouldBe = unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(one + two));
+               console.log('Total token supply should be: ' + totalSupplyShouldBe);
 
                assert.equal(result.equals(totalSupplyShouldBe), true);
                done();
@@ -687,6 +693,61 @@ describe('Smart Contracts', function() {
                     done();
                }
           );
+     });
+
+     ////// After ICO ends
+     it('should get correct foundation token balance after ICO',function(done){
+          contract.balanceOf(foundation, function(err, result){
+               assert.equal(err, null);
+
+               var priceShouldBe = 200;
+
+               // 10%
+               var totalSupplyShouldBe = getTotalSupplyShouldBe();
+               var percent = 0.10;
+
+               console.log('Foundation token balance after reward: ');
+               console.log(result.toString(10));
+
+               assert.equal(result, totalSupplyShouldBe * percent);
+               done();
+          });
+     });
+
+     it('should get correct founders token balance after ICO',function(done){
+          contract.balanceOf(founders, function(err, result){
+               assert.equal(err, null);
+
+               var priceShouldBe = 200;
+
+               // 10%
+               var totalSupplyShouldBe = getTotalSupplyShouldBe();
+               var percent = 0.10;
+
+               console.log('Founders token balance after reward: ');
+               console.log(result.toString(10));
+
+               assert.equal(result, totalSupplyShouldBe * percent);
+               done();
+          });
+     });
+
+     it('should get correct devs token balance after ICO',function(done){
+          contract.balanceOf(devs, function(err, result){
+               assert.equal(err, null);
+
+               var priceShouldBe = 200;
+
+               // 5%
+               var totalSupplyShouldBe = getTotalSupplyShouldBe();
+               var percent = 0.05;
+
+               console.log('Founders token balance after reward: ');
+               console.log(result.toString(10));
+
+               assert.equal(result, totalSupplyShouldBe * percent);
+               done();
+          });
      });
 
      /*

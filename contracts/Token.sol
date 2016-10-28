@@ -151,9 +151,9 @@ contract Crowdsale is StdToken, SafeMath
      // 1%  - to RNG imlementers 
      // 4%  - game dev.teams 
      // 75% - will be sold during crowdsale
-     uint public foundationAllocation = 10 * 10**16; 
-     uint public foundersAllocation = 10 * 10**16; 
-     uint public devsAllocation = 5 * 10**16;
+     uint public foundationAllocation = 0.1 * 10**18; 
+     uint public foundersAllocation = 0.1 * 10**18; 
+     uint public devsAllocation = 0.05 * 10**18;
 
      address public creator = 0x0;
      address public founders = 0x0;
@@ -316,7 +316,9 @@ contract DaoCasinoToken is Crowdsale
           if(isStop) throw;
           if((getCurrentBlock()<startBlock) || (getCurrentBlock()>endBlock)) throw;
 
-          uint tokens = safeMul(msg.value, getCurrentPrice(getCurrentBlock()));
+          //uint pricePerWei = getCurrentPrice(getCurrentBlock()) / (1 ether);
+          uint pricePerWei = getCurrentPrice(getCurrentBlock());
+          uint tokens = safeMul(msg.value, pricePerWei);
           balances[to] = safeAdd(balances[to], tokens);
 
           allSupply = safeAdd(allSupply, tokens);
