@@ -160,12 +160,17 @@ describe('Smart Contracts', function() {
                //var endDate = 1479884887;    // Wed, 23 Nov 2016 07:08:07 GMT
                
                var isTestContract = true;
+               var minIcoGoal = 0;
+               var maxIcoGoal = 5; // 5 ETH max
 
                tempContract.new(
                     isTestContract,
 
                     startBlock,
                     endBlock,
+
+                    minIcoGoal,
+                    maxIcoGoal,
 
                     daoFund,
 

@@ -130,6 +130,7 @@ contract StdToken is Token
 
 contract Crowdsale is StdToken, SafeMath
 {
+     string public name = "Dao Casino Token";
      uint public decimals = 18;
      string public symbol = "DCO";
 
@@ -153,9 +154,14 @@ contract Crowdsale is StdToken, SafeMath
      // 1%  - to RNG imlementers 
      // 4%  - game dev.teams 
      // 75% - will be sold during crowdsale
-     uint public foundationAllocation = 0.1 * 10**18; 
-     uint public foundersAllocation = 0.1 * 10**18; 
-     uint public devsAllocation = 0.05 * 10**18;
+     uint public constant foundationAllocation = 0.1 * 10**18; 
+     uint public constant foundersAllocation = 0.1 * 10**18; 
+     uint public constant devsAllocation = 0.05 * 10**18;
+
+     // default values (overwriten in constructor)
+     uint public minIcoEth = 100000 * 10**18;
+     uint public maxIcoEth = 800000 * 10**18;
+     uint public icoTotalEth = 0;
 
      address public creator = 0x0;
      address public founders = 0x0;
@@ -224,6 +230,8 @@ contract Crowdsale is StdToken, SafeMath
           if(getCurrentBlock()<=endBlock) throw;
           // Only once
           if(rewardAllocated) throw;
+          // If min was reached only
+          if(icoTotalEth<minIcoEth) throw;
 
           presaleTokenSupply = allSupply;
 
@@ -256,6 +264,7 @@ contract DaoCasinoToken is Crowdsale
      function DaoCasinoToken(
           bool isTestContract_,
           uint startBlock_, uint endBlock_, 
+          uint minIcoEth_, uint maxIcoEth_,
           address daoFund_,
           address foundation_, address founders_, address devs_)  
      {
@@ -269,6 +278,9 @@ contract DaoCasinoToken is Crowdsale
                blockNumber = startBlock;     // for tests only...
           }
           endBlock = endBlock_;
+
+          minIcoEth = minIcoEth_ * 10**18;
+          maxIcoEth = maxIcoEth * 10**18;
 
           daoFund = daoFund_;
           foundation = foundation_;
@@ -317,6 +329,7 @@ contract DaoCasinoToken is Crowdsale
           if (msg.value==0) throw;
           if(isStop) throw;
           if((getCurrentBlock()<startBlock) || (getCurrentBlock()>endBlock)) throw;
+          if(icoTotalEth>=maxIcoEth) throw;
 
           uint pricePerWei = getCurrentPrice(getCurrentBlock());
           uint tokens = safeMul(msg.value, pricePerWei);
@@ -330,6 +343,8 @@ contract DaoCasinoToken is Crowdsale
           daoFund.call.value(half)();
           foundation.call.value(msg.value - half)();
 
+          icoTotalEth = safeAdd(icoTotalEth, msg.value);
+
           Buy(to, msg.value, tokens);
      }
 
@@ -341,6 +356,7 @@ contract DaoCasinoToken is Crowdsale
 
           blockNumber = blockNum;
      }
+
 
      // TODO: trapdoor
 
