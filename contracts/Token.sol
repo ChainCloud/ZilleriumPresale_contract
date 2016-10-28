@@ -318,7 +318,6 @@ contract DaoCasinoToken is Crowdsale
           if(isStop) throw;
           if((getCurrentBlock()<startBlock) || (getCurrentBlock()>endBlock)) throw;
 
-          //uint pricePerWei = getCurrentPrice(getCurrentBlock()) / (1 ether);
           uint pricePerWei = getCurrentPrice(getCurrentBlock());
           uint tokens = safeMul(msg.value, pricePerWei);
           balances[to] = safeAdd(balances[to], tokens);
