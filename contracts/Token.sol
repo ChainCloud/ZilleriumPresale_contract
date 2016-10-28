@@ -130,7 +130,9 @@ contract StdToken is Token
 
 contract Crowdsale is StdToken, SafeMath
 {
-// Fields:
+     uint public decimals = 18;
+     string public symbol = "DCO";
+
      // Will allow changing the block number if set to true
      bool public isTestContract = false;
      uint public blockNumber = 0;  // only if isTestContract
