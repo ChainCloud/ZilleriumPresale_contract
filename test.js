@@ -19,7 +19,9 @@ var devs;
 var daoFund;
 
 var initialFoundersBalance;
+var initialFoundationBalance;
 var initialBuyerBalance;
+var initialDaoFundBalance;
 
 var contractAddress;
 var contract;
@@ -55,10 +57,10 @@ describe('Smart Contracts', function() {
                creator = accounts[0];
                buyer = accounts[1];
 
-               foundation = creator;
-               founders = accounts[2];
-               devs = accounts[3];
-               daoFund = accounts[4];
+               foundation = accounts[2];
+               founders = accounts[3];
+               devs = accounts[4];
+               daoFund = accounts[5];
                
                web3.eth.getBlockNumber(function(err,result){
                     assert.equal(err,null);
@@ -94,6 +96,24 @@ describe('Smart Contracts', function() {
 
           console.log('Founders initial balance: ');
           console.log(initialFoundersBalance.toString(10));
+
+          done();
+     });
+
+     it('should get foundation initial balance',function(done){
+          initialFoundationBalance = web3.eth.getBalance(foundation);
+
+          console.log('Foundation initial balance: ');
+          console.log(initialFoundationBalance.toString(10));
+
+          done();
+     });
+
+     it('should get daoFund initial balance',function(done){
+          initialDaoFundBalance = web3.eth.getBalance(daoFund);
+
+          console.log('Buyer initial balance is: ');
+          console.log(initialDaoFundBalance.toString(10));
 
           done();
      });
@@ -367,8 +387,7 @@ describe('Smart Contracts', function() {
           );
      });
 
-     it('should buy some tokens on behalf of user3',function(done){
-
+     it('should buy some tokens on behalf of buyer',function(done){
           var priceShouldBe = 200;
 
           // accounts[2]
@@ -378,7 +397,7 @@ describe('Smart Contracts', function() {
           contract.buyTokensFor(
                buyer,
                {
-                    from: accounts[2],
+                    from: founders,               // accounts[2],
                     value: web3.toWei(amount, 'ether'),
                     //gasPrice: 2000000
                },
@@ -500,6 +519,59 @@ describe('Smart Contracts', function() {
           );
      });
 
+     it('should get correct founders balance',function(done){
+          var balance = web3.eth.getBalance(founders);
+
+          console.log('Founders balance before reward is allocated: ');
+          console.log(balance.toString(10));
+
+          var diff = initialFoundersBalance - balance;
+
+          //console.log('Diff: ');
+          //console.log(diff.toString(10));
+
+          // Lost 15000000000049152 (0.015 ETH) because bought it for ... 
+          assert.equal((diff.toString() >= 15000000000000000) && (diff.toString() <= 15000000100000000),true);
+
+          done();
+     });
+
+     it('should get correct foundation balance',function(done){
+          var balance = web3.eth.getBalance(foundation);
+
+          console.log('Foundation balance before reward is allocated: ');
+          console.log(balance.toString(10));
+
+          var diff = balance - initialFoundationBalance;
+
+          console.log('Diff: ');
+          console.log(diff.toString(10));
+
+          // Got 0.01 ETH
+          assert.equal((diff.toString() >= 10000000000000000) && (diff.toString() <= 10000000100000000),true);
+
+          done();
+     });
+
+     it('should get correct daoFund balance',function(done){
+          var balance = web3.eth.getBalance(daoFund);
+
+          console.log('DaoFund balance before reward is allocated: ');
+          console.log(balance.toString(10));
+
+          var diff = balance - initialDaoFundBalance;
+
+          console.log('Diff: ');
+          console.log(diff.toString(10));
+
+          // Got 0.01 ETH
+          assert.equal((diff.toString() >= 10000000000000000) && (diff.toString() <= 10000000100000000),true);
+
+          done();
+     });
+
+     ///////////////////////////////////////////
+     // Now get the rewards...
      it('should allow to allocate reward',function(done){
           contract.allocateRewardTokens(
                {
@@ -514,21 +586,6 @@ describe('Smart Contracts', function() {
           );
      });
 
-     it('should get founders reward balance',function(done){
-          var balance = web3.eth.getBalance(founders);
-
-          console.log('Founders balance after reward allocated: ');
-          console.log(balance.toString(10));
-
-          var diff = initialFoundersBalance - balance;
-
-          console.log('Diff: ');
-          console.log(diff.toString(10));
-
-          // TODO: 15000000000049152 is 0.015 ETH. Too much... 
-
-          done();
-     });
 
      /*
      it('should get correct total supply after ICO',function(done){
