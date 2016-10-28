@@ -112,8 +112,17 @@ describe('Smart Contracts', function() {
      it('should get daoFund initial balance',function(done){
           initialDaoFundBalance = web3.eth.getBalance(daoFund);
 
-          console.log('Buyer initial balance is: ');
+          console.log('Dao Fund initial balance is: ');
           console.log(initialDaoFundBalance.toString(10));
+
+          done();
+     });
+
+     it('should get devs initial balance',function(done){
+          initialDevsBalance = web3.eth.getBalance(devs);
+
+          console.log('Devs initial balance is: ');
+          console.log(initialDevsBalance.toString(10));
 
           done();
      });
@@ -519,16 +528,16 @@ describe('Smart Contracts', function() {
           );
      });
 
-     it('should get correct founders balance',function(done){
+     it('should get correct founders ETH balance',function(done){
           var balance = web3.eth.getBalance(founders);
 
-          console.log('Founders balance before reward is allocated: ');
-          console.log(balance.toString(10));
+          //console.log('Founders balance before reward is allocated: ');
+          //console.log(balance.toString(10));
 
           var diff = initialFoundersBalance - balance;
 
-          //console.log('Diff: ');
-          //console.log(diff.toString(10));
+          console.log('Founders ETH diff before reward is allocated: ');
+          console.log('- ' + diff.toString(10));
 
           // Lost 15000000000049152 (0.015 ETH) because bought it for ... 
           assert.equal((diff.toString() >= 15000000000000000) && (diff.toString() <= 15000000100000000),true);
@@ -536,38 +545,132 @@ describe('Smart Contracts', function() {
           done();
      });
 
-     it('should get correct foundation balance',function(done){
+     it('should get correct foundation ETH balance',function(done){
           var balance = web3.eth.getBalance(foundation);
 
-          console.log('Foundation balance before reward is allocated: ');
-          console.log(balance.toString(10));
+          //console.log('Foundation balance before reward is allocated: ');
+          //console.log(balance.toString(10));
 
           var diff = balance - initialFoundationBalance;
 
-          console.log('Diff: ');
-          console.log(diff.toString(10));
+          console.log('Foundation ETH diff before reward is allocated: ');
+          console.log('+ ' + diff.toString(10));
 
-          // Got 0.01 ETH
+          // Got 0.01 ETH (0.02 split into 2)
           assert.equal((diff.toString() >= 10000000000000000) && (diff.toString() <= 10000000100000000),true);
 
           done();
      });
 
-     it('should get correct daoFund balance',function(done){
+     it('should get correct daoFund ETH balance',function(done){
           var balance = web3.eth.getBalance(daoFund);
 
-          console.log('DaoFund balance before reward is allocated: ');
-          console.log(balance.toString(10));
+          //console.log('DaoFund balance before reward is allocated: ');
+          //console.log(balance.toString(10));
 
           var diff = balance - initialDaoFundBalance;
 
-          console.log('Diff: ');
-          console.log(diff.toString(10));
+          console.log('DaoFund ETH diff before reward is allocated: ');
+          console.log('+ ' + diff.toString(10));
 
-          // Got 0.01 ETH
+          // Got 0.01 ETH (0.02 split into 2)
           assert.equal((diff.toString() >= 10000000000000000) && (diff.toString() <= 10000000100000000),true);
 
           done();
+     });
+
+     it('should get correct devs ETH balance',function(done){
+          var balance = web3.eth.getBalance(devs);
+
+          //console.log('Devs balance before reward is allocated: ');
+          //console.log(balance.toString(10));
+
+          var diff = balance - initialDevsBalance;
+
+          console.log('Devs ETH diff before reward is allocated: ');
+          console.log('+ ' + diff.toString(10));
+
+          // Got 0.01 ETH (0.02 split into 2)
+          //assert.equal((diff.toString() >= 10000000000000000) && (diff.toString() <= 10000000100000000),true);
+          assert.equal(diff.toString(),0);
+
+          done();
+     });
+
+     it('should get correct total supply before the ICO',function(done){
+          contract.totalSupply(function(err, result){
+               assert.equal(err, null);
+
+               var priceShouldBe = 200;
+               var one = 0.005;
+               var two = 0.015;
+
+               var totalSupplyShouldBe = unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(one + two));
+
+               assert.equal(result.equals(totalSupplyShouldBe), true);
+               done();
+          });
+     });
+
+     ////// 
+     it('should get correct foundation token balance',function(done){
+          contract.balanceOf(foundation, function(err, result){
+               assert.equal(err, null);
+
+               var priceShouldBe = 200;
+               var amount = 0;
+
+               //console.log('Founders token balance before reward: ');
+               //console.log(result.toString(10));
+
+               assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(amount))), true);
+               done();
+          });
+     });
+
+     it('should get correct founders token balance',function(done){
+          contract.balanceOf(founders, function(err, result){
+               assert.equal(err, null);
+
+               var priceShouldBe = 200;
+               var amount = 0;
+
+               //console.log('Founders token balance before reward: ');
+               //console.log(result.toString(10));
+
+               assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(amount))), true);
+               done();
+          });
+     });
+
+     it('should get correct daoFund token balance',function(done){
+          contract.balanceOf(daoFund, function(err, result){
+               assert.equal(err, null);
+
+               var priceShouldBe = 200;
+               var amount = 0;
+
+               //console.log('Founders token balance before reward: ');
+               //console.log(result.toString(10));
+
+               assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(amount))), true);
+               done();
+          });
+     });
+
+     it('should get correct devs token balance',function(done){
+          contract.balanceOf(devs, function(err, result){
+               assert.equal(err, null);
+
+               var priceShouldBe = 200;
+               var amount = 0;
+
+               //console.log('Founders token balance before reward: ');
+               //console.log(result.toString(10));
+
+               assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(amount))), true);
+               done();
+          });
      });
 
      ///////////////////////////////////////////
@@ -586,13 +689,14 @@ describe('Smart Contracts', function() {
           );
      });
 
-
      /*
+     // TODO: uncomment
+
      it('should get correct total supply after ICO',function(done){
           contract.totalSupply(function(err, result){
                assert.equal(err, null);
 
-               console.log('Total token supply: ');
+               console.log('Total token supply after ICO: ');
                console.log(result.toString(10));
 
                var priceShouldBe = 200;
@@ -602,22 +706,6 @@ describe('Smart Contracts', function() {
                var shouldBeTotal = one + two;
 
                assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(shouldBeTotal))), true);
-               done();
-          });
-     });
-     */
-
-     // TODO:
-     /*
-     it('should get correct founders token balance',function(done){
-
-          contract.balanceOf(founders, function(err, result){
-               assert.equal(err, null);
-
-               console.log('Founders token balance: ');
-               console.log(result.toString(10));
-
-               assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(amount))), true);
                done();
           });
      });
