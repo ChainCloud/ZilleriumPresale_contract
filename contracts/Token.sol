@@ -139,6 +139,9 @@ contract Crowdsale is StdToken, SafeMath
      uint public blockNumber = 0;  // only if isTestContract
      bool public isStop = false;
 
+     // used in 'refund'
+     mapping(address => uint256) balancesEth;
+
      uint256 public allSupply = 0;
      uint public presaleTokenSupply = 0; //this will keep track of the token supply created during the crowdsale
      uint public presaleEtherRaised = 0; //this will keep track of the Ether raised during the crowdsale
@@ -258,6 +261,7 @@ contract DaoCasinoToken is Crowdsale
 {
 // Events:
      event Buy(address indexed sender, uint eth, uint fbt);
+     event Refund(address indexed sender, uint eth, uint fbt);
 
 
 // Functions:
@@ -333,7 +337,9 @@ contract DaoCasinoToken is Crowdsale
 
           uint pricePerWei = getCurrentPrice(getCurrentBlock());
           uint tokens = safeMul(msg.value, pricePerWei);
+
           balances[to] = safeAdd(balances[to], tokens);
+          balancesEth[to] = safeAdd(balancesEth[to], msg.value);
 
           allSupply = safeAdd(allSupply, tokens);
 
@@ -357,6 +363,32 @@ contract DaoCasinoToken is Crowdsale
           blockNumber = blockNum;
      }
 
+
+     // TODO: test it
+     // 
+     // See - https://blog.golemproject.net/gnt-crowdfunding-contract-in-pictures-d6b5a2e69150
+     // for more details
+     function refund() 
+     {
+          // only if crowdsale finished, but failed
+          if((getCurrentBlock()>startBlock) && (getCurrentBlock()<endBlock)) throw;
+          if(icoTotalEth<minIcoEth) throw;
+
+          var tokens = balances[msg.sender];
+          var ethValue = balancesEth[msg.sender];
+
+          if(tokens==0) throw;
+          if(ethValue==0) throw;
+
+          balancesEth[msg.sender] = 0;
+          balances[msg.sender] = 0;
+
+          allSupply-=tokens;
+
+          if(!msg.sender.send(ethValue)) throw;
+
+          Refund(msg.sender, ethValue, tokens);
+     }
 
      // TODO: trapdoor
 
