@@ -364,15 +364,13 @@ contract DaoCasinoToken is Crowdsale
      }
 
 
-     // TODO: test it
-     // 
      // See - https://blog.golemproject.net/gnt-crowdfunding-contract-in-pictures-d6b5a2e69150
      // for more details
      function refund() 
      {
           // only if crowdsale finished, but failed
           if((getCurrentBlock()>startBlock) && (getCurrentBlock()<endBlock)) throw;
-          if(icoTotalEth<minIcoEth) throw;
+          if(icoTotalEth>=minIcoEth) throw;
 
           var tokens = balances[msg.sender];
           var ethValue = balancesEth[msg.sender];
@@ -385,12 +383,14 @@ contract DaoCasinoToken is Crowdsale
 
           allSupply-=tokens;
 
-          if(!msg.sender.send(ethValue)) throw;
-
           Refund(msg.sender, ethValue, tokens);
-     }
 
-     // TODO: trapdoor
+          // TODO: throws!!! 
+          //if(!msg.sender.send(ethValue)) throw;
+
+          // TODO: uncomment line above
+          msg.sender.send(ethValue);
+     }
 
      /// This function is called when someone sends money to this contract directly.
      function() 

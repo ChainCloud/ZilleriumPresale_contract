@@ -765,3 +765,288 @@ describe('Smart Contracts', function() {
           });
      });
 });
+
+describe('Smart Contracts with very high ICO goal', function() {
+     before("Initialize everything", function(done) {
+          web3.eth.getAccounts(function(err, as) {
+               if(err) {
+                    done(err);
+                    return;
+               }
+
+               accounts = as;
+
+               //console.log('ACC: ');
+               //console.log(accounts);
+
+               creator = accounts[0];
+               buyer = accounts[1];
+
+               foundation = accounts[2];
+               founders = accounts[3];
+               devs = accounts[4];
+               daoFund = accounts[5];
+               
+               web3.eth.getBlockNumber(function(err,result){
+                    assert.equal(err,null);
+
+                    //var startBlock =  2491935; // 10-23-2016 10:57 my local time 
+                    startBlock =  result; 
+                    endBlock   = startBlock + convertDaysToBlocks(35);
+
+                    console.log('Start block: ' + startBlock);
+                    console.log('End block: ' + endBlock);
+
+                    done();
+               });
+          });
+     });
+
+     after("Deinitialize everything", function(done) {
+          done();
+     });
+
+
+     it('should get buyer initial balance',function(done){
+          initialBuyerBalance = web3.eth.getBalance(buyer);
+
+          console.log('Buyer initial balance is: ');
+          console.log(initialBuyerBalance.toString(10));
+
+          done();
+     });
+
+     it('Should compile contract', function(done) {
+          var file = './contracts/Token.sol';
+          var contractName = 'DaoCasinoToken';
+
+          fs.readFile(file, function(err, result){
+               assert.equal(err,null);
+
+               var source = result.toString();
+               assert.notEqual(source.length,0);
+
+               var output = solc.compile(source, 1); // 1 activates the optimiser
+
+               //console.log('OUTPUT: ');
+               //console.log(output);
+
+               abi = JSON.parse(output.contracts[contractName].interface);
+               var bytecode = output.contracts[contractName].bytecode;
+               var tempContract = web3.eth.contract(abi);
+
+               var alreadyCalled = false;
+
+               //var startDate = 1477206494;  // Sun, 23 Oct 2016 07:08:14 GMT
+               //var endDate = 1479884887;    // Wed, 23 Nov 2016 07:08:07 GMT
+               
+               var isTestContract = true;
+               var minIcoGoal = 20;  // 20 ETH min
+               var maxIcoGoal = 100; // 100 ETH max
+
+               tempContract.new(
+                    isTestContract,
+
+                    startBlock,
+                    endBlock,
+
+                    minIcoGoal,
+                    maxIcoGoal,
+
+                    daoFund,
+
+                    foundation,
+                    founders,
+                    devs,
+                    {
+                         from: creator, 
+                         gas: 3000000, 
+                         data: bytecode
+                    }, 
+                    function(err, c){
+                         assert.equal(err, null);
+
+                         web3.eth.getTransactionReceipt(c.transactionHash, function(err, result){
+                              assert.equal(err, null);
+
+                              console.log('Contract address: ');
+                              console.log(result.contractAddress);
+
+                              contractAddress = result.contractAddress;
+                              contract = web3.eth.contract(abi).at(result.contractAddress);
+
+                              //console.log('Contract: ');
+                              //console.log(contract);
+
+                              if(!alreadyCalled){
+                                   done();
+                              }
+                              alreadyCalled = true;
+                         });
+                    });
+          });
+     });
+
+     it('should buy some tokens',function(done){
+          sleep.sleep(2);
+
+          var amount = 0.005;
+
+          var priceShouldBe = 200;
+          var shouldBe = (amount * priceShouldBe);  // current price
+
+          contract.getCurrentPrice(
+               startBlock,
+
+               {
+                    from: buyer, 
+                    gas: 1000000,
+               },
+               function(err, result){
+                    assert.equal(err, null);
+                    assert.equal(result.toString(10),priceShouldBe);
+
+                    contract.buyTokens(
+                         {
+                              from: buyer,      // buyer
+                              value: web3.toWei(amount, 'ether'),
+                              //gasPrice: 2000000
+                         },
+                         function(err, result){
+                              assert.equal(err, null);
+
+                              contract.balanceOf(buyer, function(err, result){
+                                   assert.equal(err, null);
+
+                                   console.log('Result: ');
+                                   console.log(result.toString(10));
+
+                                   assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(amount))), true);
+
+                                   contract.totalSupply(function(err, result){
+                                        assert.equal(err, null);
+
+                                        assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(amount))), true);
+
+                                        done();
+                                   });
+                              });
+                         }
+                    );
+               }
+          );
+     });
+
+     it('should not allow allocate reward if ICO failed',function(done){
+          contract.allocateRewardTokens(
+               {
+                    from: creator,
+                    gas: 3000000
+               },
+               function(err, result){
+                    assert.notEqual(err, null);
+
+                    done();
+               }
+          );
+     });
+
+     // sale ends...
+     it('should set block num (for tests only)',function(done){
+          var newBlockNum = endBlock + 100;    
+
+          console.log('Setting current block number: ' + newBlockNum);
+          contract.setBlockNumber(
+               newBlockNum,
+               {
+                    from: creator,
+                    gas: 3000000
+               },
+               function(err, result){
+                    assert.equal(err, null);
+
+                    done();
+               }
+          );
+     });
+
+     it('should not allow to buy more tokens after ICO ended',function(done){
+          var amount = 0.005;
+          contract.buyTokens(
+               {
+                    from: buyer,      // buyer
+                    value: web3.toWei(amount, 'ether'),
+                    //gasPrice: 2000000
+               },
+               function(err, result){
+                    assert.notEqual(err, null);
+
+                    // check
+                    contract.balanceOf(buyer, function(err, result){
+                         assert.equal(err, null);
+
+                         console.log('Balance after we bought: ');
+                         console.log(result.toString(10));
+
+                         assert.equal(result.toString(10),'1000000000000000000');
+
+                         contract.totalSupply(function(err, result){
+                              assert.equal(err, null);
+
+                              assert.equal(result.toString(10),'1000000000000000000');
+
+                              done();
+                         });
+                    });
+               }
+          );
+     });
+
+     it('should not allow to allocate reward if ICO failed',function(done){
+          contract.allocateRewardTokens(
+               {
+                    from: creator,
+                    gas: 3000000
+               },
+               function(err, result){
+                    assert.notEqual(err, null);
+
+                    done();
+               }
+          );
+     });
+
+     it('should refund ',function(done){
+          console.log('Asking for refund because ICO failed...');
+
+          contract.refund(
+               {
+                    from: buyer,
+                    gas: 3000000
+               },
+               function(err, result){
+                    assert.equal(err, null);
+
+                    contract.balanceOf(buyer, function(err, result){
+                         assert.equal(err, null);
+
+                         console.log('Balance after refund: ');
+                         console.log(result.toString(10));
+
+                         assert.equal(result.toString(10),0);
+
+                         contract.totalSupply(function(err, result){
+                              assert.equal(err, null);
+
+                              assert.equal(result.toString(10),0);
+
+                              // TODO: check buyer ETH balance
+
+                              done();
+                         });
+                    });
+               }
+          );
+     });
+
+});
