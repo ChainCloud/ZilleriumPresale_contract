@@ -330,7 +330,6 @@ describe('Smart Contracts', function() {
           );
      });
 
-     /*
      it('should fail if <stop> is called by creator',function(done){
           contract.stop(
                true,
@@ -534,7 +533,6 @@ describe('Smart Contracts', function() {
                }
           );
      });
-     */
 
      /*
      it('should get correct accountB ETH balance',function(done){
