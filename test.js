@@ -13,15 +13,18 @@ var abi;
 var accounts;
 var creator;
 var buyer;
-var foundation;
-var founders;
-var devs;
-var daoFund;
 
-var initialFoundersBalance;
-var initialFoundationBalance;
-var initialBuyerBalance;
-var initialDaoFundBalance;
+///////////////////////////////// 
+var accountA;
+var accountB;
+var accountC;
+var accountFund;
+
+var initialBalanceA;
+var initialBalanceB;
+var initialBalanceC;
+var initialBalanceFund;
+///////////////////////////////// 
 
 var contractAddress;
 var contract;
@@ -65,10 +68,10 @@ describe('Smart Contracts', function() {
                creator = accounts[0];
                buyer = accounts[1];
 
-               foundation = accounts[2];
-               founders = accounts[3];
-               devs = accounts[4];
-               daoFund = accounts[5];
+               accountA = accounts[2];
+               accountB = accounts[3];
+               accountC = accounts[4];
+               accountFund = accounts[5];
                
                web3.eth.getBlockNumber(function(err,result){
                     assert.equal(err,null);
@@ -89,55 +92,45 @@ describe('Smart Contracts', function() {
           done();
      });
 
+     it('should get accountA initial balance',function(done){
+          initialBalanceA = web3.eth.getBalance(accountA);
 
-     it('should get buyer initial balance',function(done){
-          initialBuyerBalance = web3.eth.getBalance(buyer);
-
-          console.log('Buyer initial balance is: ');
-          console.log(initialBuyerBalance.toString(10));
-
-          done();
-     });
-
-     it('should get founders initial balance',function(done){
-          initialFoundersBalance = web3.eth.getBalance(founders);
-
-          console.log('Founders initial balance: ');
-          console.log(initialFoundersBalance.toString(10));
+          console.log('Account A initial balance: ');
+          console.log(initialBalanceA.toString(10));
 
           done();
      });
 
-     it('should get foundation initial balance',function(done){
-          initialFoundationBalance = web3.eth.getBalance(foundation);
+     it('should get accountB initial balance',function(done){
+          initialBalanceB = web3.eth.getBalance(accountB);
 
-          console.log('Foundation initial balance: ');
-          console.log(initialFoundationBalance.toString(10));
-
-          done();
-     });
-
-     it('should get daoFund initial balance',function(done){
-          initialDaoFundBalance = web3.eth.getBalance(daoFund);
-
-          console.log('Dao Fund initial balance is: ');
-          console.log(initialDaoFundBalance.toString(10));
+          console.log('Account B initial balance: ');
+          console.log(initialBalanceB.toString(10));
 
           done();
      });
 
-     it('should get devs initial balance',function(done){
-          initialDevsBalance = web3.eth.getBalance(devs);
+     it('should get accountC initial balance',function(done){
+          initialBalanceC = web3.eth.getBalance(buyer);
 
-          console.log('Devs initial balance is: ');
-          console.log(initialDevsBalance.toString(10));
+          console.log('Account C initial balance is: ');
+          console.log(initialBalanceC.toString(10));
+
+          done();
+     });
+
+     it('should get accountFund initial balance',function(done){
+          initialBalanceFund = web3.eth.getBalance(accountFund);
+
+          console.log('Fund initial balance is: ');
+          console.log(initialBalanceFund.toString(10));
 
           done();
      });
 
      it('Should compile contract', function(done) {
           var file = './contracts/Token.sol';
-          var contractName = 'DaoCasinoToken';
+          var contractName = 'ZilleriumToken';
 
           fs.readFile(file, function(err, result){
                assert.equal(err,null);
@@ -172,11 +165,11 @@ describe('Smart Contracts', function() {
                     minIcoGoal,
                     maxIcoGoal,
 
-                    daoFund,
+                    accountA,
+                    accountB,
+                    accountC,
 
-                    foundation,
-                    founders,
-                    devs,
+                    accountFund,
                     {
                          from: creator, 
                          gas: 3000000, 
@@ -337,6 +330,7 @@ describe('Smart Contracts', function() {
           );
      });
 
+     /*
      it('should fail if <stop> is called by creator',function(done){
           contract.stop(
                true,
@@ -419,7 +413,7 @@ describe('Smart Contracts', function() {
           contract.buyTokensFor(
                buyer,
                {
-                    from: founders,               // accounts[2],
+                    from: accountB,               // accounts[2],
                     value: web3.toWei(amount, 'ether'),
                     //gasPrice: 2000000
                },
@@ -449,7 +443,7 @@ describe('Smart Contracts', function() {
           console.log('Buyer balance: ');
           console.log(balance.toString(10));
           
-          var diff = initialBuyerBalance - balance;
+          var diff = initialBalanceC - balance;
 
           console.log('Diff: ');
           console.log(diff.toString(10));
@@ -462,7 +456,7 @@ describe('Smart Contracts', function() {
      });
 
      it('should not allow allocate reward before ICO ends',function(done){
-          contract.allocateRewardTokens(
+          contract.rewardTeam(
                {
                     from: creator,
                     gas: 3000000
@@ -528,7 +522,7 @@ describe('Smart Contracts', function() {
      });
 
      it('should not allow allocate reward if called not by creator',function(done){
-          contract.allocateRewardTokens(
+          contract.rewardTeam(
                {
                     from: buyer,
                     gas: 3000000
@@ -540,14 +534,12 @@ describe('Smart Contracts', function() {
                }
           );
      });
+     */
 
-     it('should get correct founders ETH balance',function(done){
-          var balance = web3.eth.getBalance(founders);
-
-          //console.log('Founders balance before reward is allocated: ');
-          //console.log(balance.toString(10));
-
-          var diff = initialFoundersBalance - balance;
+     /*
+     it('should get correct accountB ETH balance',function(done){
+          var balance = web3.eth.getBalance(accountB);
+          var diff = initialBalanceB - balance;
 
           console.log('Founders ETH diff before reward is allocated: ');
           console.log('- ' + diff.toString(10));
@@ -558,13 +550,14 @@ describe('Smart Contracts', function() {
           done();
      });
 
-     it('should get correct foundation ETH balance',function(done){
-          var balance = web3.eth.getBalance(foundation);
+     /*
+     it('should get correct accountA ETH balance',function(done){
+          var balance = web3.eth.getBalance(accountA);
 
           //console.log('Foundation balance before reward is allocated: ');
           //console.log(balance.toString(10));
 
-          var diff = balance - initialFoundationBalance;
+          var diff = balance - initialBalanceB;
 
           console.log('Foundation ETH diff before reward is allocated: ');
           console.log('+ ' + diff.toString(10));
@@ -575,37 +568,19 @@ describe('Smart Contracts', function() {
           done();
      });
 
-     it('should get correct daoFund ETH balance',function(done){
-          var balance = web3.eth.getBalance(daoFund);
+     it('should get correct accountFund ETH balance',function(done){
+          var balance = web3.eth.getBalance(accountFund);
 
           //console.log('DaoFund balance before reward is allocated: ');
           //console.log(balance.toString(10));
 
-          var diff = balance - initialDaoFundBalance;
+          var diff = balance - initialBalanceD;
 
           console.log('DaoFund ETH diff before reward is allocated: ');
           console.log('+ ' + diff.toString(10));
 
           // Got 0.01 ETH (0.02 split into 2)
           assert.equal((diff.toString() >= 10000000000000000) && (diff.toString() <= 10000000100000000),true);
-
-          done();
-     });
-
-     it('should get correct devs ETH balance',function(done){
-          var balance = web3.eth.getBalance(devs);
-
-          //console.log('Devs balance before reward is allocated: ');
-          //console.log(balance.toString(10));
-
-          var diff = balance - initialDevsBalance;
-
-          console.log('Devs ETH diff before reward is allocated: ');
-          console.log('+ ' + diff.toString(10));
-
-          // Got 0.01 ETH (0.02 split into 2)
-          //assert.equal((diff.toString() >= 10000000000000000) && (diff.toString() <= 10000000100000000),true);
-          assert.equal(diff.toString(),0);
 
           done();
      });
@@ -622,10 +597,12 @@ describe('Smart Contracts', function() {
                done();
           });
      });
+     */
 
      ////// 
-     it('should get correct foundation token balance',function(done){
-          contract.balanceOf(foundation, function(err, result){
+     /*
+     it('should get correct accountA token balance',function(done){
+          contract.balanceOf(accountA, function(err, result){
                assert.equal(err, null);
 
                var priceShouldBe = 200;
@@ -639,8 +616,8 @@ describe('Smart Contracts', function() {
           });
      });
 
-     it('should get correct founders token balance',function(done){
-          contract.balanceOf(founders, function(err, result){
+     it('should get correct accountB token balance',function(done){
+          contract.balanceOf(accountB, function(err, result){
                assert.equal(err, null);
 
                var priceShouldBe = 200;
@@ -654,8 +631,8 @@ describe('Smart Contracts', function() {
           });
      });
 
-     it('should get correct daoFund token balance',function(done){
-          contract.balanceOf(daoFund, function(err, result){
+     it('should get correct accountFund token balance',function(done){
+          contract.balanceOf(accountFund, function(err, result){
                assert.equal(err, null);
 
                var priceShouldBe = 200;
@@ -669,8 +646,8 @@ describe('Smart Contracts', function() {
           });
      });
 
-     it('should get correct devs token balance',function(done){
-          contract.balanceOf(devs, function(err, result){
+     it('should get correct accountC token balance',function(done){
+          contract.balanceOf(accountC, function(err, result){
                assert.equal(err, null);
 
                var priceShouldBe = 200;
@@ -687,7 +664,7 @@ describe('Smart Contracts', function() {
      ///////////////////////////////////////////
      // Now get the rewards...
      it('should allow to allocate reward',function(done){
-          contract.allocateRewardTokens(
+          contract.rewardTeam(
                {
                     from: creator,
                     gas: 3000000
@@ -701,71 +678,21 @@ describe('Smart Contracts', function() {
      });
 
      ////// After ICO ends
-     it('should get correct foundation token balance after ICO',function(done){
-          contract.balanceOf(foundation, function(err, result){
+     it('should get correct accountA token balance after ICO',function(done){
+          contract.balanceOf(accountA, function(err, result){
                assert.equal(err, null);
 
-               // 10%
                var totalSupplyShouldBe = getTotalSupplyShouldBe();
-               var percent = 0.10;
-
-               console.log('Foundation token balance after reward: ');
-               console.log(result.toString(10));
+               var percent = 0;
 
                assert.equal(result, totalSupplyShouldBe * percent);
                done();
           });
      });
-
-     it('should get correct founders token balance after ICO',function(done){
-          contract.balanceOf(founders, function(err, result){
-               assert.equal(err, null);
-
-               // 10%
-               var totalSupplyShouldBe = getTotalSupplyShouldBe();
-               var percent = 0.10;
-
-               console.log('Founders token balance after reward: ');
-               console.log(result.toString(10));
-
-               assert.equal(result, totalSupplyShouldBe * percent);
-               done();
-          });
-     });
-
-     it('should get correct devs token balance after ICO',function(done){
-          contract.balanceOf(devs, function(err, result){
-               assert.equal(err, null);
-
-               // 5%
-               var totalSupplyShouldBe = getTotalSupplyShouldBe();
-               var percent = 0.05;
-
-               console.log('Founders token balance after reward: ');
-               console.log(result.toString(10));
-
-               assert.equal(result, totalSupplyShouldBe * percent);
-               done();
-          });
-     });
-
-     it('should get correct total supply after ICO',function(done){
-          contract.totalSupply(function(err, result){
-               assert.equal(err, null);
-
-               console.log('Total token supply after ICO: ');
-               console.log(result.toString(10));
-
-               var totalSupplyShouldBe = getTotalSupplyShouldBe();
-               // additional 25%
-               var percent = 1.25;
-
-               assert.equal(result, totalSupplyShouldBe * percent);
-               done();
-          });
-     });
+     */
 });
 
+/*
 describe('Smart Contracts with very high ICO goal', function() {
      before("Initialize everything", function(done) {
           web3.eth.getAccounts(function(err, as) {
@@ -782,10 +709,10 @@ describe('Smart Contracts with very high ICO goal', function() {
                creator = accounts[0];
                buyer = accounts[1];
 
-               foundation = accounts[2];
-               founders = accounts[3];
-               devs = accounts[4];
-               daoFund = accounts[5];
+               accountA = accounts[2];
+               accountB = accounts[3];
+               accountC = accounts[4];
+               accountFund = accounts[5];
                
                web3.eth.getBlockNumber(function(err,result){
                     assert.equal(err,null);
@@ -808,17 +735,17 @@ describe('Smart Contracts with very high ICO goal', function() {
 
 
      it('should get buyer initial balance',function(done){
-          initialBuyerBalance = web3.eth.getBalance(buyer);
+          initialBalanceC = web3.eth.getBalance(buyer);
 
           console.log('Buyer initial balance is: ');
-          console.log(initialBuyerBalance.toString(10));
+          console.log(initialBalanceC.toString(10));
 
           done();
      });
 
      it('Should compile contract', function(done) {
           var file = './contracts/Token.sol';
-          var contractName = 'DaoCasinoToken';
+          var contractName = 'ZilleriumToken';
 
           fs.readFile(file, function(err, result){
                assert.equal(err,null);
@@ -853,11 +780,11 @@ describe('Smart Contracts with very high ICO goal', function() {
                     minIcoGoal,
                     maxIcoGoal,
 
-                    daoFund,
+                    accountA,
+                    accountB,
+                    accountC,
 
-                    foundation,
-                    founders,
-                    devs,
+                    accountFund,
                     {
                          from: creator, 
                          gas: 3000000, 
@@ -938,7 +865,7 @@ describe('Smart Contracts with very high ICO goal', function() {
      });
 
      it('should not allow allocate reward if ICO failed',function(done){
-          contract.allocateRewardTokens(
+          contract.rewardTeam(
                {
                     from: creator,
                     gas: 3000000
@@ -1003,7 +930,7 @@ describe('Smart Contracts with very high ICO goal', function() {
      });
 
      it('should not allow to allocate reward if ICO failed',function(done){
-          contract.allocateRewardTokens(
+          contract.rewardTeam(
                {
                     from: creator,
                     gas: 3000000
@@ -1048,5 +975,5 @@ describe('Smart Contracts with very high ICO goal', function() {
                }
           );
      });
-
 });
+*/

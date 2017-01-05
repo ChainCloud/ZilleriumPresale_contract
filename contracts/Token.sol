@@ -1,5 +1,4 @@
 
-
 contract SafeMath 
 {
      function safeMul(uint a, uint b) internal returns (uint) 
@@ -130,9 +129,9 @@ contract StdToken is Token
 
 contract Crowdsale is StdToken, SafeMath
 {
-     string public name = "Dao Casino Token";
+     string public name = "Zillerium Token";
      uint public decimals = 18;
-     string public symbol = "DCO";
+     string public symbol = "ZTK";
 
      // Will allow changing the block number if set to true
      bool public isTestContract = false;
@@ -152,25 +151,20 @@ contract Crowdsale is StdToken, SafeMath
      uint public startBlock = 0;
      uint public endBlock = 0; 
 
-     // 10% - to the Foundation of the DAO.Casino platform
-     // 10% - founders’ reward
-     // 1%  - to RNG imlementers 
-     // 4%  - game dev.teams 
-     // 75% - will be sold during crowdsale
-     uint public constant foundationAllocation = 0.1 * 10**18; 
-     uint public constant foundersAllocation = 0.1 * 10**18; 
-     uint public constant devsAllocation = 0.05 * 10**18;
+     uint public constant allocationA = 0.25 * 10**18; 
+     uint public constant allocationB = 0.25 * 10**18; 
+     uint public constant allocationC = 0.25 * 10**18;
 
-     // default values (overwriten in constructor)
-     uint public minIcoEth = 100000 * 10**18;
-     uint public maxIcoEth = 800000 * 10**18;
+     uint public minIcoEth = 0 * 10**18;
+     uint public maxIcoEth = 0 * 10**18;
      uint public icoTotalEth = 0;
 
      address public creator = 0x0;
-     address public founders = 0x0;
-     address public foundation = 0x0;
-     address public devs = 0x0;
-     address public daoFund = 0x0;
+     
+     address public rewardA = 0x0;
+     address public rewardB = 0x0;
+     address public rewardC = 0x0;
+     address public fund = 0x0;
 
      // Please see our whitepaper for details
      // The default block time is 14 seconds. See - https://etherscan.io/charts/blocktime
@@ -225,7 +219,7 @@ contract Crowdsale is StdToken, SafeMath
           return;
      }
 
-     function allocateRewardTokens() 
+     function rewardTeam() 
      {
           // Only by creator
           if(msg.sender!=creator) throw;
@@ -238,26 +232,28 @@ contract Crowdsale is StdToken, SafeMath
 
           presaleTokenSupply = allSupply;
 
-          // Founders 
-          var foundersReward = presaleTokenSupply * foundersAllocation / (1 ether);
-          balances[founders] = safeAdd(balances[founders], foundersReward);
-          allSupply = safeAdd(allSupply, foundersReward);
+          // A 
+          /*
+          var a = presaleTokenSupply * allocationA / (1 ether);
+          balances[rewardA] = safeAdd(balances[rewardA], a);
+          allSupply = safeAdd(allSupply, a);
 
-          // Foundation
-          var foundationReward = presaleTokenSupply * foundationAllocation / (1 ether);
-          balances[foundation] = safeAdd(balances[foundation], foundationReward);
-          allSupply = safeAdd(allSupply, foundationReward);
+          // B 
+          var b = presaleTokenSupply * allocationB / (1 ether);
+          balances[rewardB] = safeAdd(balances[rewardB], b);
+          allSupply = safeAdd(allSupply, b);
 
-          // Devs
-          var devsReward = presaleTokenSupply * devsAllocation / (1 ether);
-          balances[devs] = safeAdd(balances[devs], devsReward);
-          allSupply = safeAdd(allSupply, devsReward);
+          // C 
+          var c = presaleTokenSupply * allocationC / (1 ether);
+          balances[rewardC] = safeAdd(balances[rewardC], c);
+          allSupply = safeAdd(allSupply, c);
 
           rewardAllocated = true;
+          */
      }
 }
 
-contract DaoCasinoToken is Crowdsale
+contract ZilleriumToken is Crowdsale
 {
 // Events:
      event Buy(address indexed sender, uint eth, uint fbt);
@@ -265,12 +261,11 @@ contract DaoCasinoToken is Crowdsale
 
 
 // Functions:
-     function DaoCasinoToken(
+     function ZilleriumToken(
           bool isTestContract_,
           uint startBlock_, uint endBlock_, 
           uint minIcoEth_, uint maxIcoEth_,
-          address daoFund_,
-          address foundation_, address founders_, address devs_)  
+          address rewardA_, address rewardB_, address rewardC_, address fundAddress_)  
      {
           creator = msg.sender;
           
@@ -284,12 +279,12 @@ contract DaoCasinoToken is Crowdsale
           endBlock = endBlock_;
 
           minIcoEth = minIcoEth_ * 10**18;
-          maxIcoEth = maxIcoEth * 10**18;
+          maxIcoEth = maxIcoEth_ * 10**18;
 
-          daoFund = daoFund_;
-          foundation = foundation_;
-          founders = founders_;
-          devs = devs_;
+          rewardA = rewardA_;
+          rewardB = rewardB_;
+          rewardC = rewardC_;
+          fund = fundAddress_;
      }
 
      function transfer(address _to, uint256 _value) returns (bool success) 
@@ -342,13 +337,6 @@ contract DaoCasinoToken is Crowdsale
           balancesEth[to] = safeAdd(balancesEth[to], msg.value);
 
           allSupply = safeAdd(allSupply, tokens);
-
-          // 50% of the resulting Eth CrowdSale will be invested in the creation of «DAO.Casino Platform». 
-          // 50% of the resulting Eth CrowdSale goes to the DAO fund
-          uint half = uint(msg.value / 2);
-          daoFund.call.value(half)();
-          foundation.call.value(msg.value - half)();
-
           icoTotalEth = safeAdd(icoTotalEth, msg.value);
 
           Buy(to, msg.value, tokens);

@@ -19,7 +19,7 @@ if (typeof web3 !== 'undefined') {
 
   //Config
 var file = './contracts/Token.sol';
-var contractName = 'DaoCasinoToken';
+var contractName = 'ZilleriumToken';
 
 console.log('Reading contract file');
 fs.readFile(file, function(err, result){

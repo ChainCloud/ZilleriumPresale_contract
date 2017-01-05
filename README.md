@@ -1,4 +1,4 @@
-# DaoCasino ICO
+# Zillerium Presale contract 
 
 ```bash
     npm install -g mocha
