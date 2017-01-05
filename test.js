@@ -534,7 +534,6 @@ describe('Smart Contracts', function() {
           );
      });
 
-     /*
      it('should get correct accountB ETH balance',function(done){
           var balance = web3.eth.getBalance(accountB);
           var diff = initialBalanceB - balance;
@@ -544,41 +543,6 @@ describe('Smart Contracts', function() {
 
           // Lost 15000000000049152 (0.015 ETH) because bought it for ... 
           assert.equal((diff.toString() >= 15000000000000000) && (diff.toString() <= 15000000100000000),true);
-
-          done();
-     });
-
-     /*
-     it('should get correct accountA ETH balance',function(done){
-          var balance = web3.eth.getBalance(accountA);
-
-          //console.log('Foundation balance before reward is allocated: ');
-          //console.log(balance.toString(10));
-
-          var diff = balance - initialBalanceB;
-
-          console.log('Foundation ETH diff before reward is allocated: ');
-          console.log('+ ' + diff.toString(10));
-
-          // Got 0.01 ETH (0.02 split into 2)
-          assert.equal((diff.toString() >= 10000000000000000) && (diff.toString() <= 10000000100000000),true);
-
-          done();
-     });
-
-     it('should get correct accountFund ETH balance',function(done){
-          var balance = web3.eth.getBalance(accountFund);
-
-          //console.log('DaoFund balance before reward is allocated: ');
-          //console.log(balance.toString(10));
-
-          var diff = balance - initialBalanceD;
-
-          console.log('DaoFund ETH diff before reward is allocated: ');
-          console.log('+ ' + diff.toString(10));
-
-          // Got 0.01 ETH (0.02 split into 2)
-          assert.equal((diff.toString() >= 10000000000000000) && (diff.toString() <= 10000000100000000),true);
 
           done();
      });
@@ -595,10 +559,8 @@ describe('Smart Contracts', function() {
                done();
           });
      });
-     */
 
      ////// 
-     /*
      it('should get correct accountA token balance',function(done){
           contract.balanceOf(accountA, function(err, result){
                assert.equal(err, null);
@@ -687,7 +649,6 @@ describe('Smart Contracts', function() {
                done();
           });
      });
-     */
 });
 
 /*
