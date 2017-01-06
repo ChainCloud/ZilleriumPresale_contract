@@ -138,8 +138,7 @@ contract Crowdsale is StdToken, SafeMath
      uint public blockNumber = 0;  // only if isTestContract
      bool public isStop = false;
 
-     // used in 'refund'
-     mapping(address => uint256) balancesEth;
+     mapping(address => uint256) public balancesEth;
 
      uint256 public allSupply = 0;
      uint public presaleTokenSupply = 0; //this will keep track of the token supply created during the crowdsale
@@ -155,15 +154,10 @@ contract Crowdsale is StdToken, SafeMath
      uint public constant allocationB = 0.25 * 10**18; 
      uint public constant allocationC = 0.25 * 10**18;
 
-     uint public minIcoEth = 0 * 10**18;
-     uint public maxIcoEth = 0 * 10**18;
-     uint public icoTotalEth = 0;
+     uint public maxIcoWei = 0;
+     uint public icoTotalWei = 0;
 
      address public creator = 0x0;
-     
-     address public rewardA = 0x0;
-     address public rewardB = 0x0;
-     address public rewardC = 0x0;
      address public fund = 0x0;
 
      // Please see our whitepaper for details
@@ -218,72 +212,30 @@ contract Crowdsale is StdToken, SafeMath
           blockOut = block.number;
           return;
      }
-
-     function rewardTeam() 
-     {
-          // Only by creator
-          if(msg.sender!=creator) throw;
-          // This method should be called after ICO ends
-          if(getCurrentBlock()<=endBlock) throw;
-          // Only once
-          if(rewardAllocated) throw;
-          // If min was reached only
-          if(icoTotalEth<minIcoEth) throw;
-
-          presaleTokenSupply = allSupply;
-
-          // A 
-          /*
-          var a = presaleTokenSupply * allocationA / (1 ether);
-          balances[rewardA] = safeAdd(balances[rewardA], a);
-          allSupply = safeAdd(allSupply, a);
-
-          // B 
-          var b = presaleTokenSupply * allocationB / (1 ether);
-          balances[rewardB] = safeAdd(balances[rewardB], b);
-          allSupply = safeAdd(allSupply, b);
-
-          // C 
-          var c = presaleTokenSupply * allocationC / (1 ether);
-          balances[rewardC] = safeAdd(balances[rewardC], c);
-          allSupply = safeAdd(allSupply, c);
-
-          rewardAllocated = true;
-          */
-     }
 }
 
 contract ZilleriumToken is Crowdsale
 {
 // Events:
      event Buy(address indexed sender, uint eth, uint fbt);
-     event Refund(address indexed sender, uint eth, uint fbt);
-
 
 // Functions:
      function ZilleriumToken(
           bool isTestContract_,
           uint startBlock_, uint endBlock_, 
-          uint minIcoEth_, uint maxIcoEth_,
-          address rewardA_, address rewardB_, address rewardC_, address fundAddress_)  
+          uint maxIcoEth_,
+          address fundAddress_)  
      {
           creator = msg.sender;
           
           isTestContract = isTestContract_;
 
           startBlock = startBlock_;
-          if(isTestContract)
-          {
-               blockNumber = startBlock;     // for tests only...
-          }
+          blockNumber = startBlock;     // for tests only...
           endBlock = endBlock_;
 
-          minIcoEth = minIcoEth_ * 10**18;
-          maxIcoEth = maxIcoEth_ * 10**18;
+          maxIcoWei = maxIcoEth_ * 10**18;
 
-          rewardA = rewardA_;
-          rewardB = rewardB_;
-          rewardC = rewardC_;
           fund = fundAddress_;
      }
 
@@ -325,59 +277,39 @@ contract ZilleriumToken is Crowdsale
 
      function buyTokensFor(address to)
      {
-          if (msg.value==0) throw;
+          if(msg.value==0) throw;
           if(isStop) throw;
           if((getCurrentBlock()<startBlock) || (getCurrentBlock()>endBlock)) throw;
-          if(icoTotalEth>=maxIcoEth) throw;
+          if(icoTotalWei>=maxIcoWei) throw;
 
+          // example:
+          // 1 wei = 200 tokens first power day
           uint pricePerWei = getCurrentPrice(getCurrentBlock());
           uint tokens = safeMul(msg.value, pricePerWei);
+
+          if(!fund.send(msg.value)) 
+          {
+               // Can not send money
+               throw;
+          }
 
           balances[to] = safeAdd(balances[to], tokens);
           balancesEth[to] = safeAdd(balancesEth[to], msg.value);
 
           allSupply = safeAdd(allSupply, tokens);
-          icoTotalEth = safeAdd(icoTotalEth, msg.value);
+          icoTotalWei = safeAdd(icoTotalWei, msg.value);
 
           Buy(to, msg.value, tokens);
      }
 
      //FOR TESTING PURPOSES:
-     function setBlockNumber(uint blockNum) {
+     function setBlockNumber(uint blockNum) 
+     {
           if(msg.sender!=creator) throw;
 
           if(!isTestContract) throw;
 
           blockNumber = blockNum;
-     }
-
-
-     // See - https://blog.golemproject.net/gnt-crowdfunding-contract-in-pictures-d6b5a2e69150
-     // for more details
-     function refund() 
-     {
-          // only if crowdsale finished, but failed
-          if((getCurrentBlock()>startBlock) && (getCurrentBlock()<endBlock)) throw;
-          if(icoTotalEth>=minIcoEth) throw;
-
-          var tokens = balances[msg.sender];
-          var ethValue = balancesEth[msg.sender];
-
-          if(tokens==0) throw;
-          if(ethValue==0) throw;
-
-          balancesEth[msg.sender] = 0;
-          balances[msg.sender] = 0;
-
-          allSupply-=tokens;
-
-          Refund(msg.sender, ethValue, tokens);
-
-          // TODO: throws!!! 
-          //if(!msg.sender.send(ethValue)) throw;
-
-          // TODO: uncomment line above
-          msg.sender.send(ethValue);
      }
 
      /// This function is called when someone sends money to this contract directly.
