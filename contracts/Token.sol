@@ -74,6 +74,8 @@ contract StdToken is Token
      mapping(address => uint256) balances;
      mapping (address => mapping (address => uint256)) allowed;
 
+     uint256 public allSupply = 0;
+
 // Functions:
      function transfer(address _to, uint256 _value) returns (bool success) 
      {
@@ -125,40 +127,93 @@ contract StdToken is Token
      {
           return allowed[_owner][_spender];
      }
+
+     function totalSupply() constant returns (uint256 supplyOut) 
+     {
+          supplyOut = allSupply;
+          return;
+     }
 }
 
-contract Crowdsale is StdToken, SafeMath
+contract ZilleriumToken is StdToken
 {
      string public name = "Zillerium Token";
      uint public decimals = 18;
      string public symbol = "ZTK";
 
+     address public creator = 0x0;
+     address public tokenClient = 0x0; // who can issue more tokens
+
+     bool locked = false;
+
+     function ZilleriumToken()
+     {
+          creator = msg.sender;
+          tokenClient = msg.sender;
+     }
+
+     function changeClient(address newAddress)
+     {
+          if(msg.sender!=creator)throw;
+          tokenClient = newAddress;
+     }
+
+     function lock(bool value)
+     {
+          if(msg.sender!=creator) throw;
+
+          locked = value;
+     }
+
+     function transfer(address to, uint256 value) returns (bool success)
+     {
+          if(locked)throw;
+
+          success = super.transfer(to, value);
+          return;
+     }
+
+     function transferFrom(address from, address to, uint256 value) returns (bool success)
+     {
+          if(locked)throw;
+
+          success = super.transferFrom(from, to, value);
+          return;
+     }
+
+     function issueTokens(address forAddress, uint tokenCount) returns (bool success)
+     {
+          if(msg.sender!=tokenClient)throw;
+          
+          if(tokenCount==0) {
+               success = false;
+               return ;
+          }
+
+          balances[forAddress]+=tokenCount;
+          allSupply+=tokenCount;
+
+          success = true;
+          return;
+     }
+}
+
+contract Presale
+{
      // Will allow changing the block number if set to true
      bool public isTestContract = false;
      uint public blockNumber = 0;  // only if isTestContract
      bool public isStop = false;
 
-     mapping(address => uint256) public balancesEth;
-
-     uint256 public allSupply = 0;
      uint public presaleTokenSupply = 0; //this will keep track of the token supply created during the crowdsale
      uint public presaleEtherRaised = 0; //this will keep track of the Ether raised during the crowdsale
-
-     bool rewardAllocated = false;
 
 // Parameters:
      uint public startBlock = 0;
      uint public endBlock = 0; 
-
-     uint public constant allocationA = 0.25 * 10**18; 
-     uint public constant allocationB = 0.25 * 10**18; 
-     uint public constant allocationC = 0.25 * 10**18;
-
-     uint public maxIcoWei = 0;
-     uint public icoTotalWei = 0;
-
-     address public creator = 0x0;
-     address public fund = 0x0;
+     
+     uint public maxPresaleWei = 0;
+     uint public presaleTotalWei = 0;
 
      // Please see our whitepaper for details
      // The default block time is 14 seconds. See - https://etherscan.io/chart/blocktime
@@ -214,27 +269,31 @@ contract Crowdsale is StdToken, SafeMath
      }
 }
 
-contract ZilleriumToken is Crowdsale
+contract ZilleriumPresale is ZilleriumToken, Presale, SafeMath
 {
+     address public creator = 0x0;
+     address public fund = 0x0;
+
 // Events:
      event Buy(address indexed sender, uint eth, uint fbt);
 
 // Functions:
-     function ZilleriumToken(
+     function ZilleriumPresale(
           bool isTestContract_,
           uint startBlock_, uint endBlock_, 
           uint maxIcoEth_,
           address fundAddress_)  
      {
           creator = msg.sender;
-          
+          changeClient(this);
+
           isTestContract = isTestContract_;
 
           startBlock = startBlock_;
           blockNumber = startBlock;     // for tests only...
           endBlock = endBlock_;
 
-          maxIcoWei = maxIcoEth_ * 10**18;
+          maxPresaleWei = maxIcoEth_ * 10**18;
 
           fund = fundAddress_;
      }
@@ -263,12 +322,6 @@ contract ZilleriumToken is Crowdsale
           isStop = _stop;
      }
 
-     function totalSupply() constant returns (uint256 supplyOut) 
-     {
-          supplyOut = allSupply;
-          return;
-     }
-
      function buyTokens()
      {
           address to = msg.sender;
@@ -280,7 +333,7 @@ contract ZilleriumToken is Crowdsale
           if(msg.value==0) throw;
           if(isStop) throw;
           if((getCurrentBlock()<startBlock) || (getCurrentBlock()>endBlock)) throw;
-          if(icoTotalWei>=maxIcoWei) throw;
+          if(presaleTotalWei>=maxPresaleWei) throw;
 
           // example:
           // 1 wei = 200 tokens first power day
@@ -293,11 +346,9 @@ contract ZilleriumToken is Crowdsale
                throw;
           }
 
-          balances[to] = safeAdd(balances[to], tokens);
-          balancesEth[to] = safeAdd(balancesEth[to], msg.value);
+          issueTokens(to,tokens);
 
-          allSupply = safeAdd(allSupply, tokens);
-          icoTotalWei = safeAdd(icoTotalWei, msg.value);
+          presaleTotalWei = safeAdd(presaleTotalWei, msg.value);
 
           Buy(to, msg.value, tokens);
      }

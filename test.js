@@ -105,7 +105,7 @@ describe('Smart Contracts', function() {
 
      it('Should compile contract', function(done) {
           var file = './contracts/Token.sol';
-          var contractName = 'ZilleriumToken';
+          var contractName = 'ZilleriumPresale';
 
           fs.readFile(file, function(err, result){
                assert.equal(err,null);
