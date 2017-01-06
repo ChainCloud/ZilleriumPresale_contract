@@ -21,6 +21,9 @@ var initialBalanceBuyer;
 var initialBalanceFund;
 ///////////////////////////////// 
 
+var tokenContractAddress;
+var tokenContract;
+
 var contractAddress;
 var contract;
 
@@ -103,7 +106,56 @@ describe('Smart Contracts', function() {
           done();
      });
 
-     it('Should compile contract', function(done) {
+     it('Should deploy contract 1', function(done) {
+          var file = './contracts/Token.sol';
+          var contractName = 'ZilleriumToken';
+
+          fs.readFile(file, function(err, result){
+               assert.equal(err,null);
+
+               var source = result.toString();
+               assert.notEqual(source.length,0);
+
+               var output = solc.compile(source, 1); // 1 activates the optimiser
+
+               //console.log('OUTPUT: ');
+               //console.log(output);
+
+               abi = JSON.parse(output.contracts[contractName].interface);
+               var bytecode = output.contracts[contractName].bytecode;
+               var tempContract = web3.eth.contract(abi);
+
+               var alreadyCalled = false;
+
+               tempContract.new(
+                    {
+                         from: creator, 
+                         gas: 3000000, 
+                         data: bytecode
+                    }, 
+                    function(err, c){
+                         assert.equal(err, null);
+
+                         web3.eth.getTransactionReceipt(c.transactionHash, function(err, result){
+                              assert.equal(err, null);
+
+                              tokenContractAddress = result.contractAddress;
+                              tokenContract = web3.eth.contract(abi).at(tokenContractAddress);
+
+                              console.log('Token Contract address: ');
+                              console.log(tokenContractAddress);
+
+                              if(!alreadyCalled){
+                                   alreadyCalled = true;
+
+                                   return done();
+                              }
+                         });
+                    });
+          });
+     });
+
+     it('Should deploy contract 2', function(done) {
           var file = './contracts/Token.sol';
           var contractName = 'ZilleriumPresale';
 
@@ -131,15 +183,12 @@ describe('Smart Contracts', function() {
                var maxIcoGoal = 5; // 5 ETH max
 
                tempContract.new(
+                    tokenContractAddress,
                     isTestContract,
-
                     startBlock,
                     endBlock,
-
                     maxIcoGoal,
-
                     accountFund,
-
                     {
                          from: creator, 
                          gas: 3000000, 
@@ -161,17 +210,45 @@ describe('Smart Contracts', function() {
                               //console.log(contract);
 
                               if(!alreadyCalled){
-                                   done();
+                                   alreadyCalled = true;
+                                   return done();
                               }
-                              alreadyCalled = true;
                          });
                     });
           });
      });
 
-     it('should get current token price',function(done){
-          sleep.sleep(2);
+     it('should set client',function(done){
+          sleep.sleep(5);
 
+          tokenContract.changeClient(
+               contractAddress,
+               {
+                    from: creator, 
+                    gas: 1000000,
+               },
+               function(err, result){
+                    assert.equal(err, null);
+
+                    done();
+               }
+          );
+     });
+
+     it('should get correct initial total supply',function(done){
+          tokenContract.totalSupply(function(err, result){
+               assert.equal(err, null);
+
+               console.log('Initial token supply: ');
+               console.log(result.toString(10));
+
+               assert.equal(result.toString(10),0);
+
+               done();
+          });
+     });
+
+     it('should get current token price',function(done){
           var next1  = startBlock + convertDaysToBlocks(1);
           var next10 = startBlock + convertDaysToBlocks(10);
           var from16 = startBlock + convertDaysToBlocks(17);
@@ -240,19 +317,6 @@ describe('Smart Contracts', function() {
           );
      });
 
-     it('should get correct initial total supply',function(done){
-          contract.totalSupply(function(err, result){
-               assert.equal(err, null);
-
-               console.log('Initial token supply: ');
-               console.log(result.toString(10));
-
-               assert.equal(result.toString(10),0);
-
-               done();
-          });
-     });
-
      it('should buy some tokens',function(done){
           var amount = 0.005;
 
@@ -279,7 +343,10 @@ describe('Smart Contracts', function() {
                          function(err, result){
                               assert.equal(err, null);
 
-                              contract.balanceOf(buyer, function(err, result){
+                              console.log('TC: ');
+                              console.log(tokenContract.balanceOf);
+
+                              tokenContract.balanceOf(buyer, function(err, result){
                                    assert.equal(err, null);
 
                                    console.log('Result: ');
@@ -287,7 +354,7 @@ describe('Smart Contracts', function() {
 
                                    assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(amount))), true);
 
-                                   contract.totalSupply(function(err, result){
+                                   tokenContract.totalSupply(function(err, result){
                                         assert.equal(err, null);
 
                                         assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(amount))), true);
@@ -343,7 +410,7 @@ describe('Smart Contracts', function() {
                          function(err, result){
                               assert.notEqual(err, null);
 
-                              contract.balanceOf(buyer, function(err, result){
+                              tokenContract.balanceOf(buyer, function(err, result){
                                    assert.equal(err, null);
 
                                    // balance should not be changed...
@@ -390,13 +457,13 @@ describe('Smart Contracts', function() {
                function(err, result){
                     assert.equal(err, null);
 
-                    contract.balanceOf(buyer, function(err, result){
+                    tokenContract.balanceOf(buyer, function(err, result){
                          assert.equal(err, null);
 
                          assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(amount + amountWas))), true);
 
 
-                         contract.balanceOf(accountB, function(err, result){
+                         tokenContract.balanceOf(accountB, function(err, result){
                               assert.equal(err, null);
 
                               assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(0))), true);
@@ -495,7 +562,7 @@ describe('Smart Contracts', function() {
      });
 
      it('should get correct accountFund token balance',function(done){
-          contract.balanceOf(accountFund, function(err, result){
+          tokenContract.balanceOf(accountFund, function(err, result){
                assert.equal(err, null);
 
                var priceShouldBe = 200;

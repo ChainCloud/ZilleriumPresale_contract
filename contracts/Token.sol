@@ -155,6 +155,7 @@ contract ZilleriumToken is StdToken
      function changeClient(address newAddress)
      {
           if(msg.sender!=creator)throw;
+
           tokenClient = newAddress;
      }
 
@@ -269,23 +270,26 @@ contract Presale
      }
 }
 
-contract ZilleriumPresale is ZilleriumToken, Presale, SafeMath
+contract ZilleriumPresale is Presale, SafeMath
 {
      address public creator = 0x0;
      address public fund = 0x0;
+
+     ZilleriumToken public zilleriumToken;
 
 // Events:
      event Buy(address indexed sender, uint eth, uint fbt);
 
 // Functions:
      function ZilleriumPresale(
+          address zilleriumToken_,
           bool isTestContract_,
           uint startBlock_, uint endBlock_, 
           uint maxIcoEth_,
           address fundAddress_)  
      {
           creator = msg.sender;
-          changeClient(this);
+          zilleriumToken = ZilleriumToken(zilleriumToken_);
 
           isTestContract = isTestContract_;
 
@@ -304,7 +308,7 @@ contract ZilleriumPresale is ZilleriumToken, Presale, SafeMath
                throw;
           }
 
-          return super.transfer(_to, _value);
+          return zilleriumToken.transfer(_to, _value);
      }
      
      function transferFrom(address _from, address _to, uint256 _value) returns (bool success) 
@@ -313,7 +317,7 @@ contract ZilleriumPresale is ZilleriumToken, Presale, SafeMath
                throw;
           }
 
-          return super.transferFrom(_from, _to, _value);
+          return zilleriumToken.transferFrom(_from, _to, _value);
      }
 
      function stop(bool _stop)
@@ -346,7 +350,7 @@ contract ZilleriumPresale is ZilleriumToken, Presale, SafeMath
                throw;
           }
 
-          issueTokens(to,tokens);
+          zilleriumToken.issueTokens(to,tokens);
 
           presaleTotalWei = safeAdd(presaleTotalWei, msg.value);
 
