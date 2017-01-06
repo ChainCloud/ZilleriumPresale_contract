@@ -509,6 +509,23 @@ describe('Smart Contracts', function() {
           });
      });
 
+     it('accountFund balance should be increased',function(done){
+          var balance = web3.eth.getBalance(accountFund);
 
+          console.log('Fund balance: ');
+          console.log(balance.toString(10));
+          
+          var diff = balance - initialBalanceFund;
+
+          console.log('Diff: ');
+          console.log(diff.toString(10));
+
+          // diff includes Gas fees
+          // 0.005 + 0.015 ETH
+          // 20000000000000000
+          assert.equal((diff.toString() >= 20000000000000000) && (diff.toString() <= 20000000100000000),true);
+
+          done();
+     });
 });
 
