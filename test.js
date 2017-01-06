@@ -216,24 +216,25 @@ describe('Smart Contracts', function() {
                // first day - power day
                {addDays: 0, price: 200},
 
-               // 190 next 14 days
                {addDays: 1, price: 190},
-               {addDays: 10, price: 190},
+               {addDays: 2, price: 190},
 
-               // 180 from 16 to 18 days
-               {addDays: 17, price: 180},
-               // 170 tokens: days 20 to 22 (3 days total)
-               {addDays: 21, price: 170},
-               // 160 tokens: days 23 to 26 (3 days total)
-               {addDays: 24, price: 160},
-               // 150 tokens: days 27 to 28 (2 days total)
-               {addDays: 28, price: 150},
-               // 140 tokens: days 29 to 30 (2 days total)
-               {addDays: 29, price: 140},
-               // 140 tokens: days 29 to 30 (2 days total)
-               {addDays: 30, price: 140},
-               {addDays: 31, price: 140},
-               {addDays: 40, price: 140},
+               {addDays: 3, price: 180},
+               {addDays: 4, price: 180},
+
+               {addDays: 5, price: 170},
+               {addDays: 6, price: 170},
+
+               {addDays: 7, price: 160},
+               {addDays: 8, price: 160},
+
+               {addDays: 9, price: 150},
+               {addDays: 10, price: 150},
+
+               {addDays: 11, price: 140},
+               {addDays: 12, price: 140},
+               {addDays: 13, price: 140},
+               {addDays: 14, price: 140}
           ];
           
           console.log('Starting block: ' + startBlock);

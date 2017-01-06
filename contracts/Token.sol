@@ -167,18 +167,18 @@ contract Crowdsale is StdToken, SafeMath
      address public fund = 0x0;
 
      // Please see our whitepaper for details
-     // The default block time is 14 seconds. See - https://etherscan.io/charts/blocktime
+     // The default block time is 14 seconds. See - https://etherscan.io/chart/blocktime
      function getCurrentPrice(uint currentBlock) constant returns (uint out)
      {
           // 1 ETH is 
           // 
           // 200 tokens on the first power day
-          // 190 tokens: days 2 to 15 (14 days total)
-          // 180 tokens: days 16 to 19 (3 days total)
-          // 170 tokens: days 20 to 22 (3 days total)
-          // 160 tokens: days 23 to 26 (3 days total)
-          // 150 tokens: days 27 to 28 (2 days total)
-          // 140 tokens: days 29 to 30 (2 days total)
+          // 190 tokens: days 2-3
+          // 180 tokens: days 4-5
+          // 170 tokens: days 6-7 
+          // 160 tokens: days 8-9 
+          // 150 tokens: days 10-11 
+          // 140 tokens: days 12-13 
           out = 200;
 
           //uint blocksPerDay = (24 * 60 * 60) / 14;
@@ -188,19 +188,19 @@ contract Crowdsale is StdToken, SafeMath
           if(currentIcoDay>=1){
                out = 190;
           }
-          if(currentIcoDay>=16){
+          if(currentIcoDay>=3){
                out = 180;
           }
-          if(currentIcoDay>=20){
+          if(currentIcoDay>=5){
                out = 170;
           }
-          if(currentIcoDay>=23){
+          if(currentIcoDay>=7){
                out = 160;
           }
-          if(currentIcoDay>=27){
+          if(currentIcoDay>=9){
                out = 150;
           }
-          if(currentIcoDay>=29){
+          if(currentIcoDay>=11){
                out = 140;
           }
           return;
