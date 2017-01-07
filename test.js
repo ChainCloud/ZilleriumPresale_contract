@@ -218,36 +218,6 @@ describe('Smart Contracts', function() {
           });
      });
 
-     it('should set client',function(done){
-          sleep.sleep(5);
-
-          tokenContract.changeClient(
-               contractAddress,
-               {
-                    from: creator, 
-                    gas: 1000000,
-               },
-               function(err, result){
-                    assert.equal(err, null);
-
-                    done();
-               }
-          );
-     });
-
-     it('should get correct initial total supply',function(done){
-          tokenContract.totalSupply(function(err, result){
-               assert.equal(err, null);
-
-               console.log('Initial token supply: ');
-               console.log(result.toString(10));
-
-               assert.equal(result.toString(10),0);
-
-               done();
-          });
-     });
-
      it('should get current token price',function(done){
           var next1  = startBlock + convertDaysToBlocks(1);
           var next10 = startBlock + convertDaysToBlocks(10);
@@ -317,6 +287,63 @@ describe('Smart Contracts', function() {
           );
      });
 
+     it('Should get contract 1 address', function(done) {
+          var file = './contracts/Token.sol';
+          var contractName = 'ZilleriumToken';
+
+          fs.readFile(file, function(err, result){
+               assert.equal(err,null);
+
+               var source = result.toString();
+               assert.notEqual(source.length,0);
+
+               var output = solc.compile(source, 1); // 1 activates the optimiser
+               abi = JSON.parse(output.contracts[contractName].interface);
+               tokenContract = web3.eth.contract(abi).at(tokenContractAddress);
+
+               // 
+               tokenContract.balanceOf(buyer, function(err, result){
+                    assert.equal(err, null);
+
+                    console.log('Result: ');
+                    console.log(result.toString(10));
+
+                    done();
+               });
+          });
+     });
+
+     it('should set client',function(done){
+          sleep.sleep(5);
+
+          tokenContract.changeClient(
+               contractAddress,
+               {
+                    from: creator, 
+                    gas: 1000000,
+               },
+               function(err, result){
+                    assert.equal(err, null);
+
+                    done();
+               }
+          );
+     });
+
+
+     it('should get correct initial total supply',function(done){
+          tokenContract.totalSupply(function(err, result){
+               assert.equal(err, null);
+
+               console.log('Initial token supply: ');
+               console.log(result.toString(10));
+
+               assert.equal(result.toString(10),0);
+
+               done();
+          });
+     });
+
      it('should buy some tokens',function(done){
           var amount = 0.005;
 
@@ -342,9 +369,6 @@ describe('Smart Contracts', function() {
                          },
                          function(err, result){
                               assert.equal(err, null);
-
-                              console.log('TC: ');
-                              console.log(tokenContract.balanceOf);
 
                               tokenContract.balanceOf(buyer, function(err, result){
                                    assert.equal(err, null);
@@ -493,7 +517,7 @@ describe('Smart Contracts', function() {
      });
 
      it('should get correct total supply before ICO ends',function(done){
-          contract.totalSupply(function(err, result){
+          tokenContract.totalSupply(function(err, result){
                assert.equal(err, null);
 
                console.log('Total token supply: ');
@@ -510,6 +534,24 @@ describe('Smart Contracts', function() {
                console.log(x.toString(10));
 
                assert.equal(result.equals(x), true);
+               done();
+          });
+     });
+
+     it('Should get contract 2 address', function(done) {
+          var file = './contracts/Token.sol';
+          var contractName = 'ZilleriumPresale';
+
+          fs.readFile(file, function(err, result){
+               assert.equal(err,null);
+
+               var source = result.toString();
+               assert.notEqual(source.length,0);
+
+               var output = solc.compile(source, 1); // 1 activates the optimiser
+               abi = JSON.parse(output.contracts[contractName].interface);
+               contract = web3.eth.contract(abi).at(tokenContractAddress);
+
                done();
           });
      });
@@ -542,14 +584,16 @@ describe('Smart Contracts', function() {
                     //gasPrice: 2000000
                },
                function(err, result){
+                    // TODO
                     assert.notEqual(err, null);
                     done();
                }
           );
      });
 
+     /*
      it('should get correct total supply before the ICO',function(done){
-          contract.totalSupply(function(err, result){
+          tokenContract.totalSupply(function(err, result){
                assert.equal(err, null);
 
                var totalSupplyShouldBe = getTotalSupplyShouldBe();
@@ -594,5 +638,6 @@ describe('Smart Contracts', function() {
 
           done();
      });
+     */
 });
 
