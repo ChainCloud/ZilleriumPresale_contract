@@ -202,70 +202,21 @@ contract ZilleriumToken is StdToken
 contract Presale
 {
      // Will allow changing the block number if set to true
-     bool public isTestContract = false;
-     uint public blockNumber = 0;  // only if isTestContract
      bool public isStop = false;
 
      uint public presaleTokenSupply = 0; //this will keep track of the token supply created during the crowdsale
      uint public presaleEtherRaised = 0; //this will keep track of the Ether raised during the crowdsale
 
 // Parameters:
-     uint public startBlock = 0;
-     uint public endBlock = 0; 
-     
      uint public maxPresaleWei = 0;
      uint public presaleTotalWei = 0;
 
      // Please see our whitepaper for details
-     // The default block time is 14 seconds. See - https://etherscan.io/chart/blocktime
-     function getCurrentPrice(uint currentBlock) constant returns (uint out)
+     // sell 2.5M tokens for the pre-ICO with a 20% bonus 
+     // 1 ETH = 500 tokens 
+     function getCurrentTokenPriceWei() constant returns (uint out)
      {
-          // 1 ETH is 
-          // 
-          // 200 tokens on the first power day
-          // 190 tokens: days 2-3
-          // 180 tokens: days 4-5
-          // 170 tokens: days 6-7 
-          // 160 tokens: days 8-9 
-          // 150 tokens: days 10-11 
-          // 140 tokens: days 12-13 
-          out = 200;
-
-          //uint blocksPerDay = (24 * 60 * 60) / 14;
-          uint blocksPerDay = 6171;
-          uint currentIcoDay = uint((currentBlock - startBlock) / blocksPerDay);
-
-          if(currentIcoDay>=1){
-               out = 190;
-          }
-          if(currentIcoDay>=3){
-               out = 180;
-          }
-          if(currentIcoDay>=5){
-               out = 170;
-          }
-          if(currentIcoDay>=7){
-               out = 160;
-          }
-          if(currentIcoDay>=9){
-               out = 150;
-          }
-          if(currentIcoDay>=11){
-               out = 140;
-          }
-          return;
-     }
-
-     function getCurrentBlock()returns(uint blockOut)
-     {
-          if(isTestContract)
-          {
-               // return block number that we passed here from tests...
-               blockOut = blockNumber;
-               return;
-          }
-
-          blockOut = block.number;
+          out = 2000000000000000;  // 2000000000000000 Wei = 1 token
           return;
      }
 }
@@ -283,19 +234,11 @@ contract ZilleriumPresale is Presale, SafeMath
 // Functions:
      function ZilleriumPresale(
           address zilleriumToken_,
-          bool isTestContract_,
-          uint startBlock_, uint endBlock_, 
           uint maxIcoEth_,
           address fundAddress_)  
      {
           creator = msg.sender;
           zilleriumToken = ZilleriumToken(zilleriumToken_);
-
-          isTestContract = isTestContract_;
-
-          startBlock = startBlock_;
-          blockNumber = startBlock;     // for tests only...
-          endBlock = endBlock_;
 
           maxPresaleWei = maxIcoEth_ * 10**18;
 
@@ -304,7 +247,7 @@ contract ZilleriumPresale is Presale, SafeMath
 
      function transfer(address _to, uint256 _value) returns (bool success) 
      {
-          if((getCurrentBlock() <= endBlock) && (msg.sender!=creator)) {
+          if(!presaleEnded() && (msg.sender!=creator)) {
                throw;
           }
 
@@ -313,7 +256,7 @@ contract ZilleriumPresale is Presale, SafeMath
      
      function transferFrom(address _from, address _to, uint256 _value) returns (bool success) 
      {
-          if((getCurrentBlock() <= endBlock) && (msg.sender!=creator)) {
+          if(!presaleEnded() && (msg.sender!=creator)) {
                throw;
           }
 
@@ -336,13 +279,17 @@ contract ZilleriumPresale is Presale, SafeMath
      {
           if(msg.value==0) throw;
           if(isStop) throw;
-          if((getCurrentBlock()<startBlock) || (getCurrentBlock()>endBlock)) throw;
-          if(presaleTotalWei>=maxPresaleWei) throw;
+          if(presaleEnded()) throw;
 
-          // example:
-          // 1 wei = 200 tokens first power day
-          uint pricePerWei = getCurrentPrice(getCurrentBlock());
-          uint tokens = safeMul(msg.value, pricePerWei);
+          uint pricePerToken = getCurrentTokenPriceWei();
+          if(msg.value<pricePerToken)
+          {
+               // Not enough Wei to buy at least 1 token
+               throw; 
+          }
+
+          // the div rest is not returned!
+          uint tokens = (msg.value / pricePerToken);
 
           if(!fund.send(msg.value)) 
           {
@@ -351,20 +298,13 @@ contract ZilleriumPresale is Presale, SafeMath
           }
 
           zilleriumToken.issueTokens(to,tokens);
-
           presaleTotalWei = safeAdd(presaleTotalWei, msg.value);
 
           Buy(to, msg.value, tokens);
      }
 
-     //FOR TESTING PURPOSES:
-     function setBlockNumber(uint blockNum) 
-     {
-          if(msg.sender!=creator) throw;
-
-          if(!isTestContract) throw;
-
-          blockNumber = blockNum;
+     function presaleEnded() returns(bool){
+          return (presaleTotalWei>=maxPresaleWei);
      }
 
      /// This function is called when someone sends money to this contract directly.

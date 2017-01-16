@@ -27,20 +27,17 @@ var tokenContract;
 var contractAddress;
 var contract;
 
-var startBlock;
-var endBlock;
-
 // init BigNumber
 var unit = new BigNumber(Math.pow(10,18));
 
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////
 function getTotalSupplyShouldBe(){
-     var priceShouldBe = 200;
-     var one = 0.005;
-     var two = 0.015;
+     var one = 500;
+     var two = 250;
+     var three = 500;
 
-     return unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(one + two));
+     return one + two + three;
 }
 
 function convertDaysToBlocks(days){
@@ -123,14 +120,10 @@ function deployContract2(cb){
           //var startDate = 1477206494;  // Sun, 23 Oct 2016 07:08:14 GMT
           //var endDate = 1479884887;    // Wed, 23 Nov 2016 07:08:07 GMT
           
-          var isTestContract = true;
-          var maxIcoGoal = 5; // 5 ETH max
+          var maxIcoGoal = 2; // 2 ETH max
 
           tempContract.new(
                tokenContractAddress,
-               isTestContract,
-               startBlock,
-               endBlock,
                maxIcoGoal,
                accountFund,
                {
@@ -178,18 +171,8 @@ describe('Price Check', function() {
 
                accountFund = accounts[5];
 
-               web3.eth.getBlockNumber(function(err,result){
-                    assert.equal(err,null);
 
-                    //var startBlock =  2491935; // 10-23-2016 10:57 my local time 
-                    startBlock =  result; 
-                    endBlock   = startBlock + convertDaysToBlocks(35);
-
-                    console.log('Start block: ' + startBlock);
-                    console.log('End block: ' + endBlock);
-
-                    done();
-               });
+               done();
           });
      });
 
@@ -210,70 +193,19 @@ describe('Price Check', function() {
      });
 
      it('should get current token price',function(done){
-          var next1  = startBlock + convertDaysToBlocks(1);
-          var next10 = startBlock + convertDaysToBlocks(10);
-          var from16 = startBlock + convertDaysToBlocks(17);
-          var from20 = startBlock + convertDaysToBlocks(21);
-          var from23 = startBlock + convertDaysToBlocks(24);
-          var from27 = startBlock + convertDaysToBlocks(28);
-          var from29 = startBlock + convertDaysToBlocks(29);
-          var from30 = startBlock + convertDaysToBlocks(29);
-
-
-          var tests = [
-               // first day - power day
-               {addDays: 0, price: 200},
-
-               {addDays: 1, price: 190},
-               {addDays: 2, price: 190},
-
-               {addDays: 3, price: 180},
-               {addDays: 4, price: 180},
-
-               {addDays: 5, price: 170},
-               {addDays: 6, price: 170},
-
-               {addDays: 7, price: 160},
-               {addDays: 8, price: 160},
-
-               {addDays: 9, price: 150},
-               {addDays: 10, price: 150},
-
-               {addDays: 11, price: 140},
-               {addDays: 12, price: 140},
-               {addDays: 13, price: 140},
-               {addDays: 14, price: 140}
-          ];
-          
-          console.log('Starting block: ' + startBlock);
-
-          async.mapSeries(
-               tests,
-               function(testCase, callback) {
-                    var thisBlock = startBlock + convertDaysToBlocks(testCase.addDays);
-                    console.log('Testing price for block: ' + thisBlock);
-
-                    contract.getCurrentPrice(
-                         thisBlock,
-
-                         {
-                              from: buyer, 
-                              gas: 1000000,
-                         },
-                         function(err, result){
-                              assert.equal(err, null);
-
-                              console.log('Result: ');
-                              console.log(result.toString(10));
-
-                              assert.equal(result.toString(10),testCase.price);
-                              callback(err);
-                         }
-                    );
+          contract.getCurrentTokenPriceWei(
+               {
+                    from: buyer, 
+                    gas: 1000000,
                },
+               function(err, result){
+                    assert.equal(err, null);
 
-               function(err){
-                    done();
+                    console.log('Result: ');
+                    console.log(result.toString(10));
+
+                    assert.equal(result.toString(10),testCase.price);
+                    callback(err);
                }
           );
      });
@@ -411,15 +343,13 @@ describe('Smart Contracts', function() {
           });
      });
 
-     it('should buy some tokens',function(done){
-          var amount = 0.005;
+     it('should not buy if not enough Wei for 1 token',function(done){
+          var priceShouldBe = 2000000000000000;
+          var amount = 2000000000000000 - 10;
 
-          var priceShouldBe = 200;
-          var shouldBe = (amount * priceShouldBe);  // current price
+          var shouldBe = 0;
 
-          contract.getCurrentPrice(
-               startBlock,
-
+          contract.getCurrentTokenPriceWei(
                {
                     from: buyer, 
                     gas: 1000000,
@@ -431,7 +361,50 @@ describe('Smart Contracts', function() {
                     contract.buyTokens(
                          {
                               from: buyer,      // buyer
-                              value: web3.toWei(amount, 'ether'),
+                              value: amount,
+                              //gasPrice: 2000000
+                         },
+                         function(err, result){
+                              assert.notEqual(err, null);
+
+                              tokenContract.balanceOf(buyer, function(err, result){
+                                   assert.equal(err, null);
+
+                                   assert.equal(result.equals(shouldBe), true);
+
+                                   tokenContract.totalSupply(function(err, result){
+                                        assert.equal(err, null);
+
+                                        assert.equal(result.equals(shouldBe), true);
+
+                                        done();
+                                   });
+                              });
+                         }
+                    );
+               }
+          );
+     });
+
+     it('should buy some tokens',function(done){
+          var amount = web3.toWei(1, 'ether');
+          var priceShouldBe = 2000000000000000;
+
+          var shouldBe = (amount / priceShouldBe);  // current price
+
+          contract.getCurrentTokenPriceWei(
+               {
+                    from: buyer, 
+                    gas: 1000000,
+               },
+               function(err, result){
+                    assert.equal(err, null);
+                    assert.equal(result.toString(10),priceShouldBe);
+
+                    contract.buyTokens(
+                         {
+                              from: buyer,      // buyer
+                              value: amount,
                               //gasPrice: 2000000
                          },
                          function(err, result){
@@ -443,12 +416,12 @@ describe('Smart Contracts', function() {
                                    console.log('Result: ');
                                    console.log(result.toString(10));
 
-                                   assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(amount))), true);
+                                   assert.equal(result.equals(shouldBe), true);
 
                                    tokenContract.totalSupply(function(err, result){
                                         assert.equal(err, null);
 
-                                        assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(amount))), true);
+                                        assert.equal(result.equals(shouldBe), true);
 
                                         done();
                                    });
@@ -476,10 +449,10 @@ describe('Smart Contracts', function() {
 
      // Test stopping, buying, and failing
      it('should stop ',function(done){
-          var amount = 0.005;
+          var amount = web3.toWei(0.5, 'ether');
+          var priceShouldBe = 2000000000000000;
 
-          var priceShouldBe = 200;
-          var shouldBe = (amount * priceShouldBe);  // current price
+          var shouldBe = (amount / priceShouldBe);  // current price
 
           contract.stop(
                true,
@@ -495,7 +468,7 @@ describe('Smart Contracts', function() {
                     contract.buyTokens(
                          {
                               from: buyer,      // buyer
-                              value: web3.toWei(amount, 'ether'),
+                              value: amount,
                               //gasPrice: 2000000
                          },
                          function(err, result){
@@ -505,7 +478,7 @@ describe('Smart Contracts', function() {
                                    assert.equal(err, null);
 
                                    // balance should not be changed...
-                                   assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(amount))), true);
+                                   assert.equal(result.equals(500), true);
                                    done();
                               });
                          }
@@ -532,18 +505,14 @@ describe('Smart Contracts', function() {
      });
 
      it('should buy some tokens on behalf of buyer',function(done){
-          var priceShouldBe = 200;
-
-          // accountB buys tokens for buyer
-          var amount = 0.015;
-          var amountWas = 0.005;
+          var amount = web3.toWei(0.5, 'ether');
+          var priceShouldBe = 2000000000000000;
 
           contract.buyTokensFor(
                buyer,
                {
                     from: accountB,               
-                    value: web3.toWei(amount, 'ether'),
-                    //gasPrice: 2000000
+                    value: amount,
                },
                function(err, result){
                     assert.equal(err, null);
@@ -551,13 +520,12 @@ describe('Smart Contracts', function() {
                     tokenContract.balanceOf(buyer, function(err, result){
                          assert.equal(err, null);
 
-                         assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(amount + amountWas))), true);
-
+                         assert.equal(result.equals(500 + 250), true);
 
                          tokenContract.balanceOf(accountB, function(err, result){
                               assert.equal(err, null);
 
-                              assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(0))), true);
+                              assert.equal(result.equals(0), true);
                               done();
                          });
                     });
@@ -578,7 +546,7 @@ describe('Smart Contracts', function() {
 
           // diff includes Gas fees
           // 0.005 ETH
-          assert.equal((diff.toString() >= 5000000000000000) && (diff.toString() <= 5000000100000000),true);
+          assert.equal((diff.toString() >= 1000000000000000000) && (diff.toString() <= 10000000000100000000),true);
 
           done();
      });
@@ -592,49 +560,88 @@ describe('Smart Contracts', function() {
 
                var priceShouldBe = 200;
 
-               var one = 0.005;
-               var two = 0.015;
+               var one = 500;
+               var two = 250;
                var shouldBeTotal = one + two;
 
-               var x = unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(shouldBeTotal));
-               console.log('Result: ');
-               console.log(x.toString(10));
-
-               assert.equal(result.equals(x), true);
+               assert.equal(result.equals(shouldBeTotal), true);
                done();
           });
      });
 
-     // sale ends...
-     it('should set block num (for tests only)',function(done){
-          var newBlockNum = endBlock + 1;    // plus one is just to make sure...
+     it('should buy more to end presale',function(done){
+          // already bought 1.5 ETH. needs at least 0.5 more
 
-          console.log('Setting current block number: ' + newBlockNum);
-          contract.setBlockNumber(
-               newBlockNum,
+          var amount = web3.toWei(1, 'ether');
+          var priceShouldBe = 2000000000000000;
+
+          var shouldBe = 500 + 250 + (amount / priceShouldBe);  // current price
+
+          contract.getCurrentTokenPriceWei(
                {
-                    from: creator,
-                    gas: 3000000
+                    from: buyer, 
+                    gas: 1000000,
                },
                function(err, result){
                     assert.equal(err, null);
+                    assert.equal(result.toString(10),priceShouldBe);
 
+                    contract.buyTokens(
+                         {
+                              from: buyer,      // buyer
+                              value: amount,
+                              //gasPrice: 2000000
+                         },
+                         function(err, result){
+                              assert.equal(err, null);
+
+                              tokenContract.balanceOf(buyer, function(err, result){
+                                   assert.equal(err, null);
+
+                                   console.log('Result: ');
+                                   console.log(result.toString(10));
+
+                                   assert.equal(result.equals(shouldBe), true);
+
+                                   tokenContract.totalSupply(function(err, result){
+                                        assert.equal(err, null);
+
+                                        assert.equal(result.equals(500 + 250 + 500), true);
+
+                                        done();
+                                   });
+                              });
+                         }
+                    );
+               }
+          );
+     });
+
+     it('should return that the presale has ended',function(done){
+          contract.presaleEnded(
+               {
+                    from: buyer,
+                    gas: 3000000, 
+               },
+               function(err, result){
+                    assert.equal(err, null);
                     done();
                }
           );
      });
 
      it('should not allow to buy more tokens after ICO ended',function(done){
-          var amount = 0.005;
+          var amount = web3.toWei(1, 'ether');
+
           contract.buyTokens(
                {
                     from: buyer,      // buyer
-                    value: web3.toWei(amount, 'ether'),
+                    value: amount
                     //gasPrice: 2000000
                },
                function(err, result){
-                    // TODO
-                    //assert.notEqual(err, null);
+                    assert.notEqual(err, null);
+
                     done();
                }
           );
@@ -653,21 +660,6 @@ describe('Smart Contracts', function() {
           });
      });
 
-     it('should get correct accountFund token balance',function(done){
-          tokenContract.balanceOf(accountFund, function(err, result){
-               assert.equal(err, null);
-
-               var priceShouldBe = 200;
-               var amount = 0;
-
-               //console.log('Founders token balance before reward: ');
-               //console.log(result.toString(10));
-
-               assert.equal(result.equals(unit.times(new BigNumber(priceShouldBe)).times(new BigNumber(amount))), true);
-               done();
-          });
-     });
-
      it('accountFund balance should be increased',function(done){
           var balance = web3.eth.getBalance(accountFund);
 
@@ -680,9 +672,9 @@ describe('Smart Contracts', function() {
           console.log(diff.toString(10));
 
           // diff includes Gas fees
-          // 0.005 + 0.015 ETH
-          // 20000000000000000
-          assert.equal((diff.toString() >= 20000000000000000) && (diff.toString() <= 20000000100000000),true);
+          // 0.005 + 0.015 ETH = 0.02
+          // 1 + 0.5 + 1 = 2.5 ETH
+          assert.equal((diff.toString() >= 2500000000000000000) && (diff.toString() <= 2500000001000000000),true);
 
           done();
      });
